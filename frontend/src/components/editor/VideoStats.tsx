@@ -34,8 +34,12 @@ export function VideoStats() {
           ✅
         </div>
         <div>
-          <div className="text-lg font-bold leading-tight">1080×1920</div>
-          <div className="text-[0.72rem] text-[var(--text-muted)]">Output: {state.settings.outputFormat} H.264</div>
+          <div className="text-lg font-bold leading-tight">
+            {state.outputResolution === '720×1280' ? '720p ⚡' : '1080p'}
+          </div>
+          <div className="text-[0.72rem] text-[var(--text-muted)]">
+            {state.outputResolution === '720×1280' ? '720×1280 — lebih cepat' : '1080×1920'} · H.264
+          </div>
         </div>
       </div>
     </div>

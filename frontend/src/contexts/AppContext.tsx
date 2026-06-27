@@ -67,8 +67,11 @@ export type AppState = {
   };
   uploadedFiles: File[];
   uploadedFileMeta: FileMeta[];
+  scriptSource: 'text' | 'audio';
   scriptText: string;
+  uploadedAudio: File | null;
   selectedVoice: string;
+  outputResolution: '1080×1920' | '720×1280';
   pipelineStep: PipelineStep;
   analysisResults: AnalysisResult[];
   outputHistory: OutputVideo[];
@@ -84,8 +87,11 @@ type Action =
   | { type: 'ADD_FILES'; files: File[] }
   | { type: 'REMOVE_FILE'; index: number }
   | { type: 'CLEAR_FILES' }
+  | { type: 'SET_SCRIPT_SOURCE'; source: 'text' | 'audio' }
   | { type: 'SET_SCRIPT_TEXT'; text: string }
+  | { type: 'SET_UPLOADED_AUDIO'; file: File | null }
   | { type: 'SET_VOICE'; voice: string }
+  | { type: 'SET_OUTPUT_RESOLUTION'; resolution: '1080×1920' | '720×1280' }
   | { type: 'SET_PIPELINE_STEP'; step: PipelineStep }
   | { type: 'SET_ANALYSIS'; results: AnalysisResult[] }
   | { type: 'ADD_OUTPUT'; video: OutputVideo }
@@ -117,8 +123,11 @@ const initialState: AppState = {
   },
   uploadedFiles: [],
   uploadedFileMeta: [],
+  scriptSource: 'text',
   scriptText: '',
+  uploadedAudio: null,
   selectedVoice: '🇮🇩 Rina — Indonesia Female',
+  outputResolution: '1080×1920',
   pipelineStep: 'idle',
   analysisResults: [],
   outputHistory: [],
@@ -175,11 +184,20 @@ function reducer(state: AppState, action: Action): AppState {
     case 'CLEAR_FILES':
       return { ...state, uploadedFiles: [], uploadedFileMeta: [] };
 
+    case 'SET_SCRIPT_SOURCE':
+      return { ...state, scriptSource: action.source };
+
     case 'SET_SCRIPT_TEXT':
       return { ...state, scriptText: action.text };
 
+    case 'SET_UPLOADED_AUDIO':
+      return { ...state, uploadedAudio: action.file };
+
     case 'SET_VOICE':
       return { ...state, selectedVoice: action.voice };
+
+    case 'SET_OUTPUT_RESOLUTION':
+      return { ...state, outputResolution: action.resolution };
 
     case 'SET_PIPELINE_STEP':
       return { ...state, pipelineStep: action.step };
@@ -216,8 +234,8 @@ function reducer(state: AppState, action: Action): AppState {
     case 'RESET_ALL':
       return {
         ...initialState,
-        apiKeys: initialState.apiKeys,
-        settings: initialState.settings,
+        apiKeys: { ...initialState.apiKeys },
+        settings: { ...initialState.settings },
       };
 
     case 'LOAD_STATE':
@@ -255,8 +273,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             apiKeys: saved.apiKeys || initialState.apiKeys,
             settings: saved.settings || initialState.settings,
             uploadedFileMeta: saved.uploadedFileMeta || [],
+            scriptSource: saved.scriptSource || 'text',
             scriptText: saved.scriptText || '',
             selectedVoice: saved.selectedVoice || initialState.selectedVoice,
+            outputResolution: saved.outputResolution || '1080×1920',
             pipelineStep: saved.pipelineStep || 'idle',
             outputHistory: saved.outputHistory || [],
             lastScript: saved.lastScript || null,
@@ -276,8 +296,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           apiKeys: state.apiKeys,
           settings: state.settings,
           uploadedFileMeta: state.uploadedFileMeta,
+          scriptSource: state.scriptSource,
           scriptText: state.scriptText,
           selectedVoice: state.selectedVoice,
+          outputResolution: state.outputResolution,
           pipelineStep: state.pipelineStep,
           outputHistory: state.outputHistory,
           lastScript: state.lastScript,

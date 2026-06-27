@@ -108,8 +108,11 @@ export default function EditorPage() {
               addToast('⚠️ Upload footage terlebih dahulu', 'warning');
               return;
             }
-            if (!state.scriptText.trim()) {
-              addToast('⚠️ Masukkan naskah terlebih dahulu', 'warning');
+            const hasSource = state.scriptSource === 'text'
+              ? state.scriptText.trim().length > 0
+              : state.uploadedAudio !== null;
+            if (!hasSource) {
+              addToast('⚠️ Masukkan naskah atau upload audio terlebih dahulu', 'warning');
               return;
             }
             simulatePipeline();
