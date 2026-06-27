@@ -53,6 +53,16 @@ Menggabungkan footage video + voice-over TTS menjadi satu video short vertical s
 - Pemangkasan proporsional: footage panjang kena pangkas lebih besar
 - Total durasi video akhir ≈ durasi audio TTS
 
+**Strategi 4K Source Footage:**
+- ❌ **Jangan proses 4K langsung** — CPU i5-8365U tidak kuat decode 4K + encode sekaligus (bisa 30 menit untuk 60s video)
+- ✅ **Proxy Workflow:** semua footage >1080p di-pre-process jadi 1080p vertical proxy di awal pipeline
+  - FFmpeg scale + pad ke 1080×1920, `-preset fast`, sekali per footage (~10-20 detik untuk 15s clip)
+  - Analisis (OpenCV blur/shake detection) berjalan di 1080p proxy — 4× lebih cepat
+  - Adaptive trim menghitung timecode di proxy, lalu apply ke proxy saat concat
+  - Render final dari 1080p proxy (bukan dari 4K asli) — karena output maksimal 1080p, tidak ada manfaat pakai 4K source
+- **Output:** proxy 1080p → render ke 1080×1920 atau 720×1280 sesuai pilihan user
+- File 4K asli tetap disimpan (tidak dihapus), tapi tidak dipakai di pipeline render
+
 ### C. Settings (Panel 3)
 Konfigurasi API keys untuk semua layanan eksternal:
 
