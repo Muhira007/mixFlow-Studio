@@ -1,7 +1,7 @@
 # 📊 Development Progress — mixFlow
 
 **Proyek dimulai:** 27 Juni 2026  
-**Status:** 🟡 Frontend MVP Selesai — Backend Belum Dimulai
+**Status:** 🟡 Frontend Next.js 16 Selesai — Backend Belum Dimulai
 
 ---
 
@@ -78,21 +78,34 @@ gantt
 - [x] Setup Git + push repo ke GitHub
 - [x] Setup proteksi file sensitif (.gitignore)
 
-### 1a. Frontend (HTML/CSS/JS) ✅ Selesai
-**Lokasi:** `frontend/`
-- [x] `frontend/index.html` — Single-page app 4 panel (Video Editor, Script Generator, Settings, Output)
-- [x] `frontend/css/style.css` — Design system dark theme, responsive 3 breakpoint, 1046 baris
-- [x] `frontend/js/app.js` — Engine: navigasi panel, state management, localStorage, upload file, clipboard, toast, dialog konfirmasi, 962 baris
-- [x] Tema dark (#0a0a14) + aksen gradient ungu — sesuai mockup `contoh-layout/`
-- [x] Responsive: Desktop (sidebar 260px), Tablet (grid 2 kolom), Mobile (hamburger + bottom nav)
-- [x] Semua API key & settings persisten di localStorage
-- [x] Upload footage: drag & drop, validasi format/ukuran, file chips
-- [x] Navigasi panel: sidebar + bottom nav + keyboard shortcuts (Ctrl+1..4)
-- [x] Script Generator: demo output (Version A, B, Caption), copy buttons, "Pakai di Editor"
-- [x] Progress Pipeline: 6-step visual (Upload → TTS → Analyze → Trim → Concat → Render)
-- [x] Danger Zone: hapus footage, hapus output, reset semua dengan dialog konfirmasi
-- [x] Toast notification system dengan auto-dismiss
-- [x] Swipe gesture mobile untuk buka sidebar
+### 1a. Frontend (HTML/CSS/JS) ✅ Selesai → **Diupgrade ke Next.js 16**
+**Lokasi:** `frontend/` (Next.js 16 App Router)
+- [x] `frontend/src/app/layout.tsx` — Root layout with AppProvider + MainLayout + ToastContainer
+- [x] `frontend/src/app/page.tsx` — Video Editor (main page) — upload, TTS, pipeline, render
+- [x] `frontend/src/app/script-generator/page.tsx` — AI Script Generator with demo output
+- [x] `frontend/src/app/settings/page.tsx` — API Keys, video settings, danger zone
+- [x] `frontend/src/app/outputs/page.tsx` — Output video history
+- [x] `frontend/src/app/api/proxy/[...path]/route.ts` — Proxy ke FastAPI backend
+- [x] `frontend/src/app/globals.css` — Tailwind CSS v4 + dark theme CSS variables
+- [x] `frontend/src/contexts/AppContext.tsx` — Global state: useReducer + localStorage
+- [x] `frontend/src/lib/constants.ts` — All app constants & config options
+- [x] `frontend/src/lib/api.ts` — Fetch wrapper ke backend FastAPI
+- [x] `frontend/src/lib/utils.ts` — cn(), formatFileSize(), estimateDuration()
+
+### 1a.ii. Component Tree (22 React Components)
+**Shared:** Button (4 variants, 3 sizes, loading), Card, Toast, Badge, Switch
+**Layout:** Sidebar (260px, responsive drawer), Topbar (breadcrumb + hamburger), BottomNav (mobile 4-tab), MainLayout (shell)
+**Editor:** UploadZone (drag & drop), ScriptTextarea, ProgressPipeline (6-step), VideoStats (3 cards), AnalysisTable
+**Script Gen:** ProductInput, ConfigSelects, ContentRules, ScriptOutput (Version A/B/Caption)
+**Settings:** ApiKeyInput (with status indicator), VideoSettings, DangerZone
+
+### 1a.iii. Tech Stack
+- **Next.js 16.2.9** — App Router, TypeScript, Turbopack
+- **React 19.2.4** — Server Components, 'use client' directives
+- **Tailwind CSS v4** — CSS-based config, @theme directives
+- **lucide-react** — Icon library
+- **framer-motion** — Animation (installed, ready)
+- **Build time:** ~5.5s (compiled + type-checked + static pages)
 
 ---
 
