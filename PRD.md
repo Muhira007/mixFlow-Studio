@@ -38,14 +38,37 @@ Menggabungkan footage video + voice-over TTS menjadi satu video short vertical.
 
 | Fitur | Deskripsi |
 |---|---|
-| **Upload Footage** | Multi-file, drag & drop, thumbnail preview, sort (upload/name/size/date), number labels |
+| **Upload Footage** | Multi-file, drag & drop, thumbnail preview, sort (upload/name/size/date), number labels, XHR progress per file |
 | **Sumber Naskah** | Dari Teks (tulis/paste → TTS) atau Dari Audio (upload + library hasil TTS) |
 | **TTS Generation** | ElevenLabs API — generate dari teks, preview audio di pipeline |
 | **Audio Library** | List 5 file audio terbaru (hasil TTS + upload), preview play, pilih untuk render |
-| **Progress Pipeline** | 6-step: Upload → TTS → Analyze → Trim → Concat → Render |
+| **Progress Pipeline** | 7-step: Upload → TTS → **Caption** → Analyze → Trim → Concat → Render |
+| **Auto Caption** _(planned)_ | Whisper-1 STT → SRT word-level → burn subtitle ke video (plain style) |
 | **Output Resolusi** | 1080×1920 (Full HD) atau 720×1280 (HD) — H.264 |
 
-### C. Settings & Voice Manager
+### C. Auto Caption (Planned — Fase 8)
+
+Tambahkan subtitle otomatis ke video menggunakan Whisper-1 STT.
+
+| Fitur | Deskripsi |
+|---|---|
+| **STT Engine** | OpenAI Whisper-1 (bukan realtime) — transcribe audio TTS ke teks + word timestamps |
+| **Caption Style** | Plain (teks putih per 5 kata, timing sesuai ucapan) |
+| **Burn Caption** | FFmpeg overlay subtitle ke video sebelum render final |
+| **UI Config** | Font, ukuran, warna, posisi vertikal, outline |
+| **Pipeline** | Step baru "Caption" di antara TTS dan Analyze |
+
+**Referensi:** Proyek vidflow (`/home/kangdemuh/aplikasi/vidflow`) — `stt_service.py`, `caption_rewriter.py`, `ConfigCaption.jsx`
+
+**File yang akan dibuat:**
+
+```
+backend/app/services/caption_service.py   — Whisper STT + generate SRT
+backend/app/routers/caption.py            — POST /api/caption/generate
+frontend/src/components/editor/CaptionConfig.tsx — UI setting caption
+```
+
+### D. Settings & Voice Manager
 | Fitur | Deskripsi |
 |---|---|
 | **API Keys** | ElevenLabs, DeepSeek, Gemini, OpenAI — semua tersimpan di SQLite |

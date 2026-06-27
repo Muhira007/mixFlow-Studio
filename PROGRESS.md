@@ -70,11 +70,31 @@
 - [ ] Test edge cases
 - [ ] Dokumentasi video tutorial
 
-### Future (Fase 8)
-- [ ] Subtitle otomatis
+### 🔜 Auto Caption (Fase 8 — Next Priority)
+
+**Referensi:** Proyek vidflow (`/home/kangdemuh/aplikasi/vidflow`)
+
+- [ ] `backend/app/services/caption_service.py` — Whisper-1 STT, generate SRT (word-level, 5 kata per chunk, plain style)
+- [ ] `backend/app/routers/caption.py` — `POST /api/caption/generate`, `GET/POST /api/caption/settings`
+- [ ] FFmpeg `burn_subtitles_to_video()` — overlay SRT/ASS ke video
+- [ ] `frontend/src/components/editor/CaptionConfig.tsx` — UI: font, size, color, position, style
+- [ ] Update `ProgressPipeline.tsx` — tambah step "Caption" (7-step: Upload → TTS → Caption → Analyze → Trim → Concat → Render)
+- [ ] Update `constants.ts` — `PIPELINE_STEPS` tambah caption
+- [ ] Update `page.tsx` — button "Generate Caption" + simpan SRT ke state
+- [ ] DB table `caption_settings` untuk persist config
+
+**Arsitektur:**
+```
+Audio TTS (.mp3) → Whisper-1 → SRT (teks + timestamp)
+                            → FFmpeg burn subtitle ke video
+                            → Plain style (teks putih, 5 kata/chunk)
+```
+
+### Future (Fase 9+)
 - [ ] Background music
 - [ ] Batch processing
 - [ ] Preview real-time sebelum render
+- [ ] Karaoke caption style (kata aktif kuning)
 
 ---
 
