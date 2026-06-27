@@ -66,15 +66,18 @@ gantt
 ---
 
 ## Fase 1: Project Setup & Struktur Dasar
-**Status:** ⬜ Not Started
+**Status:** 🔄 In Progress
 
-- [ ] Inisialisasi struktur folder proyek
+- [x] Inisialisasi struktur folder proyek
 - [ ] Buat `requirements.txt` dan install dependencies
-- [ ] Buat `.env.example`
+- [x] Buat `.env.example` (template, aman di-commit)
+- [x] Buat `.gitignore` (proteksi .env, uploads/, outputs/)
 - [ ] Buat `app.py` (entry point Streamlit)
 - [ ] Buat folder `pages/`
-- [ ] Buat folder `uploads/` dan `outputs/`
+- [x] Buat folder `uploads/` dan `outputs/`
 - [ ] Buat `src/__init__.py`
+- [x] Setup Git + push repo ke GitHub
+- [x] Setup proteksi file sensitif (.gitignore)
 
 ---
 

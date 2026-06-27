@@ -263,7 +263,33 @@ mixFlow/
 
 ---
 
-## 7. Non-Goals (Sengaja Ditiadakan)
+## 7. 🔒 Keamanan & Proteksi Data Sensitif
+
+### Aturan Mutlak
+Semua credential, API key, dan data sensitif **DILARANG KERAS** masuk ke repo GitHub.
+
+| File | Status Repo | Keterangan |
+|---|---|---|
+| `.env` | ❌ **DILARANG COMMIT** | Berisi API key asli (terdaftar di `.gitignore`) |
+| `.env.example` | ✅ Aman di-commit | Template dengan nilai placeholder |
+| `uploads/` | ❌ **DILARANG COMMIT** | Folder footage user (terdaftar di `.gitignore`) |
+| `outputs/` | ❌ **DILARANG COMMIT** | Hasil render video (terdaftar di `.gitignore`) |
+| `.streamlit/secrets.toml` | ❌ **DILARANG COMMIT** | Secrets Streamlit (terdaftar di `.gitignore`) |
+| Kode sumber (`src/`, `app.py`, dll) | ✅ Aman di-commit | Tidak mengandung hardcoded key |
+
+### Proteksi yang Sudah Dipasang
+- `.gitignore` — memblokir `.env`, `uploads/`, `outputs/`, `__pycache__/`, `.streamlit/secrets.toml`
+- `.env.example` — template dengan placeholder `your_xxx_key_here`
+- Semua API key hanya lewat input UI Streamlit (`st.text_input(type="password")`) atau environment variable
+
+### Checklist Sebelum Commit
+- [ ] Tidak ada API key hardcoded di source code
+- [ ] `.env` tidak masuk staging area
+- [ ] File user di `uploads/` dan `outputs/` tidak masuk staging area
+
+---
+
+## 8. Non-Goals (Sengaja Ditiadakan)
 
 Fitur-fitur dari VO-Script-Generator yang TIDAK diimplementasi:
 - ❌ Sistem autentikasi (login/register)

@@ -1,0 +1,30 @@
+# ⚠️ FILE SENSITIF - JANGAN COMMIT ⚠️
+# .env, uploads/*, outputs/*, dan file sensitif lainnya
+# Lihat .gitignore untuk daftar lengkap
+
+# Environment variables (API Keys)
+.env
+.env.local
+.env.*.local
+
+# Folder temporary (bisa berisi file user)
+uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
