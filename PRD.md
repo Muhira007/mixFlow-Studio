@@ -65,46 +65,152 @@ Konfigurasi API keys untuk semua layanan eksternal:
 
 ---
 
-## 3. Alur Kerja (User Workflow)
+## 3. Diagram & Alur Kerja
 
-### Flow Utama: Generate Script → Edit Video → Upload
+### 3.1 Flow Utama Aplikasi
 
-```
-┌─────────────────────┐
-│ 1. GENERATE NASKAH  │  Panel: Script Generator
-│ - Input nama produk │
-│ - Pilih AI provider │
-│ - Pilih durasi      │
-│ - Generate naskah   │
-│ - Copy naskah       │
-└────────┬────────────┘
-         ▼
-┌─────────────────────┐
-│ 2. EDIT VIDEO       │  Panel: Video Editor (Main)
-│ - Upload footage    │
-│ - Paste naskah      │
-│ - Generate TTS      │  → Dapat target durasi
-│ - Auto-Analyze      │  → Deteksi blur/guncang
-│ - Adaptive Trim     │  → Sesuaikan durasi
-│ - Concat + Render   │  → Video final
-└────────┬────────────┘
-         ▼
-┌─────────────────────┐
-│ 3. DOWNLOAD + POST  │
-│ - Download .mp4     │
-│ - Upload ke sosmed  │
-└─────────────────────┘
+```mermaid
+flowchart TD
+    A[🎬 User Buka mixFlow] --> B{Punya Naskah?}
+    B -- Tidak --> C[Panel: Script Generator]
+    C --> C1[Input Nama Produk]
+    C1 --> C2[Pilih AI Provider]
+    C2 --> C3[Pilih Durasi & Tone]
+    C3 --> C4[Generate Naskah]
+    C4 --> C5[Copy Naskah ✅]
+
+    B -- Ya --> D[Panel: Video Editor]
+    C5 --> D
+
+    D --> D1[Upload Footage]
+    D1 --> D2[Paste Naskah]
+    D2 --> D3[Generate TTS]
+    D3 --> D4[Analyze Footage]
+    D4 --> D5[Adaptive Trim]
+    D5 --> D6[Concat Clips]
+    D6 --> D7[Render Final]
+    D7 --> E[📥 Download .mp4]
+    E --> F[📤 Upload ke TikTok/Shopee]
 ```
 
-### Detail Flow Video Editor
+### 3.2 Detail Flow Adaptive Trim (Inti Video Editor)
 
+```mermaid
+flowchart TD
+    subgraph INPUT[Input]
+        A1[Upload Footage<br/>1.mp4, 2.mp4, ...N.mp4]
+        A2[Naskah VO]
+    end
+
+    subgraph TTS[TTS Engine]
+        B1[Eleven Labs API]
+        B2[Audio .mp3<br/>+ Target Durasi]
+    end
+
+    subgraph ANALYZE[Frame Analysis per Footage]
+        C1[Deteksi Blur<br/>Laplacian Variance]
+        C2[Deteksi Guncangan<br/>Frame Diff]
+        C3[Tentukan Good Segment<br/>start → end per footage]
+    end
+
+    subgraph TRIM[Adaptive Trim Algorithm]
+        D1[Hitung Total Good Duration]
+        D2{Bandingkan dengan<br/>Target Durasi Audio}
+        D2 -- Total > Target --> D3[Distribusi Pemangkasan<br/>Proporsional]
+        D3 --> D4{Cek Constraint<br/>Min 3 detik/footage}
+        D4 -- Ada yang masih > 3dtk --> D5[Potong lagi<br/>dari yang terpanjang]
+        D5 --> D4
+        D4 -- Semua sudah pas --> D6[✅ Durasi Match]
+        D2 -- Pas/Toleransi --> D6
+        D2 -- Total < Target --> D7[⚠️ Warning: Kurang]
+    end
+
+    subgraph OUTPUT[Render]
+        E1[Concat Semua Klip]
+        E2[Resize 9:16 1080x1920]
+        E3[Overlay Audio TTS]
+        E4[Write .mp4 Final]
+    end
+
+    A1 --> C1
+    A2 --> B1 --> B2
+    B2 -- target_durasi --> D2
+    C1 --> C3
+    C2 --> C3
+    C3 --> D1 --> D2
+    D6 --> E1 --> E2 --> E3 --> E4
+    D7 --> E4
 ```
-Upload Footage → [Generate TTS] → [Analyze Footage] → [Adaptive Trim] → [Concat] → [Render]
-                                    │                    │
-                                    ▼                    ▼
-                              Dapat target      Iteratif potong sampah
-                              durasi audio      sampai total ≈ target
-                              (misal: 40 dtk)   min 3dtk/footage
+
+### 3.3 Arsitektur Aplikasi
+
+```mermaid
+flowchart LR
+    subgraph UI[Streamlit UI - 3 Halaman]
+        U1[app.py<br/>Video Editor]
+        U2[1_Script_Generator.py<br/>AI Naskah]
+        U3[2_Settings.py<br/>API Keys]
+    end
+
+    subgraph CORE[src/ - Core Modules]
+        M1[script_generator.py<br/>DeepSeek / Gemini / OpenAI]
+        M2[scraper.py<br/>Product URL Parser]
+        M3[tts.py<br/>Eleven Labs TTS]
+        M4[video_processor.py<br/>Analyze + Adaptive Trim + Concat]
+        M5[renderer.py<br/>Final Render]
+    end
+
+    subgraph EXTERNAL[External APIs]
+        E1[Eleven Labs<br/>Text-to-Speech]
+        E2[DeepSeek API<br/>deepseek-v4-flash]
+        E3[Gemini API<br/>gemini-3.5-flash]
+        E4[OpenAI API<br/>gpt-5.4-mini]
+    end
+
+    U1 --> M3
+    U1 --> M4
+    U1 --> M5
+    U2 --> M1
+    U2 --> M2
+
+    M1 --> E2
+    M1 --> E3
+    M1 --> E4
+    M2 --> E2
+    M2 --> E3
+    M2 --> E4
+    M3 --> E1
+
+    U3 -.-> E1
+    U3 -.-> E2
+    U3 -.-> E3
+    U3 -.-> E4
+```
+
+### 3.4 Alur Script Generator
+
+```mermaid
+flowchart TD
+    A[Input: Nama Produk] --> B{Pakai URL?}
+    B -- Ya --> C[Scrape URL Produk<br/>requests + BeautifulSoup]
+    C --> D[Ambil Title + Description]
+
+    B -- Tidak --> D
+    D --> E{Pilih AI Provider}
+
+    E -- DeepSeek --> F1[POST api.deepseek.com<br/>deepseek-v4-flash]
+    E -- Gemini --> F2[GoogleGenAI SDK<br/>gemini-3.5-flash]
+    E -- OpenAI --> F3[POST api.openai.com<br/>gpt-5.4-mini]
+
+    F1 --> G[Parse JSON Output]
+    F2 --> G
+    F3 --> G
+
+    G --> H{JSON Valid?}
+    H -- Ya --> I[Output:<br/>versionA - Hard Selling<br/>versionB - Storytelling<br/>caption - Caption + Hashtag]
+    H -- Tidak --> J[Retry / Fallback]
+
+    I --> K[Copy ke Video Editor]
 ```
 
 ---

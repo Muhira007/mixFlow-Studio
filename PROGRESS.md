@@ -5,6 +5,66 @@
 
 ---
 
+## 📊 Diagram Ketergantungan Fase
+
+```mermaid
+flowchart TD
+    F1[Fase 1: Project Setup] --> F2[Fase 2: TTS Module]
+    F1 --> F3a[Fase 3a: Frame Analysis]
+    F1 --> F5a[Fase 5a: Scraper]
+
+    F2 --> F4[Fase 4: Renderer]
+    F3a --> F3b[Fase 3b: Adaptive Trim]
+    F3b --> F3c[Fase 3c: Resize & Concat]
+    F3c --> F4
+
+    F5a --> F5b[Fase 5b: Script Generator]
+    F5b --> F6b[Fase 6b: Script Generator UI]
+
+    F2 --> F6a[Fase 6a: Video Editor UI]
+    F4 --> F6a
+
+    F6a --> F7[Fase 7: Testing & Polish]
+    F6b --> F7
+    F6c[Fase 6c: Settings UI] --> F7
+
+    F7 --> F8[Fase 8: Future Features]
+```
+
+## 🗺️ Development Roadmap
+
+```mermaid
+gantt
+    title Timeline Development mixFlow
+    dateFormat  YYYY-MM-DD
+    axisFormat  %d %b
+
+    section Fase 1: Setup
+    Struktur Proyek + Dependencies     :f1, 2026-06-27, 1d
+
+    section Fase 2-4: Video Core
+    TTS Module (Eleven Labs)           :f2, after f1, 1d
+    Frame Analysis (OpenCV)            :f3a, after f1, 1d
+    Adaptive Trim Algorithm            :f3b, after f3a, 2d
+    Resize & Concat                    :f3c, after f3b, 1d
+    Renderer (Video+Audio)             :f4, after f2 f3c, 1d
+
+    section Fase 5: AI Script Gen
+    Scraper (BeautifulSoup)            :f5a, after f1, 1d
+    Script Generator (3 AI Providers)  :f5b, after f5a, 1d
+
+    section Fase 6: UI
+    Video Editor UI (app.py)           :f6a, after f4, 2d
+    Script Generator UI                :f6b, after f5b, 1d
+    Settings UI                        :f6c, after f1, 1d
+
+    section Fase 7-8: Final
+    Testing & Polish                   :f7, after f6a f6b f6c, 2d
+    Future Features                    :f8, after f7, 7d
+```
+
+---
+
 ## Fase 1: Project Setup & Struktur Dasar
 **Status:** ⬜ Not Started
 
