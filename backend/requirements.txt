@@ -1,0 +1,34 @@
+# FastAPI Backend — mixFlow
+# ============================================
+
+# Web framework
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+
+# Video processing
+moviepy==2.1.*
+opencv-python-headless==4.10.*
+numpy>=1.26,<2
+
+# AI / HTTP clients
+httpx==0.28.*
+openai>=1.0
+google-genai>=1.0
+
+# Web scraping
+requests==2.32.*
+beautifulsoup4==4.12.*
+
+# Config & env
+pydantic-settings==2.7.*
+python-dotenv==1.0.*
+
+# CORS
+# (built into FastAPI via fastapi.middleware.cors)
+
+# Image processing (use system Pillow if available)
+Pillow>=10.0
+
+# File utils
+aiofiles==24.1.*
+python-multipart==0.0.*

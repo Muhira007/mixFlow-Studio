@@ -12,11 +12,17 @@ uploads/*
 !uploads/.gitkeep
 outputs/*
 !outputs/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/outputs/*
+!backend/outputs/.gitkeep
 
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
+*.pyc
 
 # Streamlit
 .streamlit/secrets.toml
