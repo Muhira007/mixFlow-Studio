@@ -54,7 +54,7 @@ async def text_to_speech(
         (audio_file_path, duration_seconds)
     """
     if not api_key:
-        raise ValueError("Eleven Labs API key tidak boleh kosong")
+        raise ValueError("API Key ElevenLabs kosong. Isi di halaman Settings.")
 
     chunks = chunk_text(text)
     audio_files = []
@@ -77,15 +77,28 @@ async def text_to_speech(
                 },
             }
 
-            response = await client.post(url, json=payload, headers=headers)
+            try:
+                response = await client.post(url, json=payload, headers=headers)
+            except httpx.ConnectError:
+                raise RuntimeError("Gagal konek ke ElevenLabs. Cek koneksi internet.")
+            except httpx.TimeoutException:
+                raise RuntimeError("ElevenLabs timeout. Naskah terlalu panjang atau server sibuk.")
 
             if response.status_code == 401:
-                raise ValueError("Eleven Labs API key invalid")
+                raise ValueError("API Key ElevenLabs salah. Cek di halaman Settings.")
             if response.status_code == 429:
-                raise ValueError("Eleven Labs quota habis. Coba lagi nanti.")
+                raise ValueError("Kuota ElevenLabs habis. Upgrade plan atau tunggu reset bulanan.")
+            if response.status_code == 400:
+                detail = ""
+                try:
+                    err = response.json()
+                    detail = err.get("detail", {}).get("message", "")
+                except Exception:
+                    pass
+                raise ValueError(f"Request ditolak ElevenLabs. {detail}".strip())
             if response.status_code != 200:
                 raise RuntimeError(
-                    f"Eleven Labs error ({response.status_code}): {response.text[:200]}"
+                    f"ElevenLabs error HTTP {response.status_code}. Coba lagi nanti."
                 )
 
             # Save chunk

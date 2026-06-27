@@ -24,8 +24,7 @@ class ScriptGenerateRequest(BaseModel):
 
 
 class ScriptGenerateResponse(BaseModel):
-    versionA: str
-    versionB: str
+    script: str
     caption: str
     provider: str
 
@@ -47,8 +46,7 @@ async def generate_video_script(req: ScriptGenerateRequest):
             product_info=req.product_info,
         )
         return ScriptGenerateResponse(
-            versionA=result.get("versionA", ""),
-            versionB=result.get("versionB", ""),
+            script=result.get("script", ""),
             caption=result.get("caption", ""),
             provider=result.get("provider", req.provider),
         )

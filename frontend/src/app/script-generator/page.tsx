@@ -3,116 +3,154 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/contexts/AppContext';
-import { ProductInput } from '@/components/script-gen/ProductInput';
+import { ProductInput, type InputMode } from '@/components/script-gen/ProductInput';
 import { ConfigSelects } from '@/components/script-gen/ConfigSelects';
-import { ContentRules } from '@/components/script-gen/ContentRules';
 import { ScriptOutput } from '@/components/script-gen/ScriptOutput';
-
-// Demo scripts
-const DEMO_CASUAL = {
-  versionA: `Hai semuanya! Lagi cari serum yang bener-bener works buat ngilangin bekas jerawat?
-
-Aku udah coba {{PRODUCT}} selama 2 minggu, dan hasilnya bikin shock! Bekas merah udah mulai pudar, tekstur kulit makin halus.
-
-Yang paling penting: ringan banget di muka, gak lengket, dan cepat meresap. Cocok buat iklim tropis kayak di Indonesia.
-
-Cek keranjang di bawah video ini ya!`,
-  versionB: `Dua minggu lalu, aku hampir nyerah sama skin barrier yang rusak parah. Setiap pagi liat kaca, bekas jerawat masih merah-merah...
-
-Sampai akhirnya temenku rekomendasiin satu produk yang katanya ampuh: {{PRODUCT}}.
-
-Sekarang? Kulitku udah mulai pulih. Bekas merah mulai pudar, dan yang paling penting — texture-nya jadi lebih smooth. No filter!
-
-Cek tautan di bawah buat cobain sendiri!`,
-  caption: `Udah 2 minggu cobain {{PRODUCT}} & bekas jerawat mulai pudar bgt! ✨\nRingan, cepet meresap, cocok buat yang kulitnya sensitif.\n\n#SkincareIndonesia #RekomendasiSkincare #ProductReview`,
-};
-
-const DEMO_FORMAL = {
-  versionA: `Selamat datang! Hari ini saya akan membahas {{PRODUCT}}, produk inovatif yang telah mendapatkan banyak perhatian.
-
-Berdasarkan pengujian selama 2 minggu, produk ini menunjukkan hasil yang signifikan dalam mengatasi permasalahan kulit.
-
-Komposisinya ringan dan mudah meresap, menjadikannya pilihan tepat untuk penggunaan sehari-hari di iklim tropis.
-
-Klik tautan di bawah untuk informasi lebih lanjut.`,
-  versionB: `Sebagai content creator, saya selalu selektif memilih produk untuk direview. Kali ini saya menemukan {{PRODUCT}}.
-
-Setelah melakukan riset dan pengujian mandiri, saya menemukan bahwa produk ini memiliki formula yang seimbang dan efektif.
-
-Banyak pengguna melaporkan hasil positif dalam 2 minggu pertama penggunaan. Saya sendiri merasakan perbedaan yang nyata.
-
-Tautan produk tersedia di bawah video ini.`,
-  caption: `Review lengkap {{PRODUCT}} setelah pemakaian 2 minggu. 📋\nFormula ringan, hasil maksimal. Cocok untuk semua jenis kulit.\n\n#ReviewJujur #ProdukTerbaik #ContentCreator`,
-};
+import { ScriptHistory } from '@/components/script-gen/ScriptHistory';
+import { generateScript, scrapeProduct, ApiError, saveScriptToHistory, deleteScriptFromHistory } from '@/lib/api';
 
 export default function ScriptGeneratorPage() {
   const router = useRouter();
   const { state, dispatch, addToast } = useApp();
 
-  const [productName, setProductName] = useState(state.lastScript?.productName || 'GlowSkin Niacinamide Serum 30ml');
+  // Latest script = first in history
+  const latestScript = state.scriptHistory[0] || null;
+
+  const [productName, setProductName] = useState(latestScript?.productName || '');
   const [productUrl, setProductUrl] = useState('');
-  const [provider, setProvider] = useState('🧠 DeepSeek (deepseek-v4-flash)');
-  const [duration, setDuration] = useState('60 detik (~220 kata)');
-  const [style, setStyle] = useState('💬 Casual & Menarik');
-  const [audience, setAudience] = useState('🌍 Umum');
+  const [inputMode, setInputMode] = useState<InputMode>('name');
+  const [provider, setProvider] = useState(state.apiKeys.deepseek ? 'deepseek' : 'gemini');
+  const [duration, setDuration] = useState('60');
+  const [style, setStyle] = useState('santai-gaul');
+  const [audience, setAudience] = useState('umum');
   const [loading, setLoading] = useState(false);
 
-  const handleGenerate = () => {
-    if (!productName.trim()) {
+  /** Map provider value to its API key from settings */
+  const getApiKey = (prov: string): string => {
+    const map: Record<string, string> = {
+      deepseek: state.apiKeys.deepseek,
+      gemini: state.apiKeys.gemini,
+      openai: state.apiKeys.openai,
+    };
+    return map[prov] || '';
+  };
+
+  const handleGenerate = async () => {
+    // Validation
+    if (inputMode === 'url' && !productUrl.trim()) {
+      addToast('⚠️ Masukkan URL produk terlebih dahulu', 'warning');
+      return;
+    }
+    if (inputMode === 'name' && !productName.trim()) {
       addToast('⚠️ Masukkan nama produk terlebih dahulu', 'warning');
+      return;
+    }
+
+    const apiKey = getApiKey(provider);
+    if (!apiKey) {
+      addToast(`🔑 API key untuk ${provider} belum diisi. Buka Settings untuk mengisi.`, 'warning');
       return;
     }
 
     setLoading(true);
 
-    // Simulate API call (replace with real API call later)
-    setTimeout(() => {
-      const isFormal = style.includes('Formal');
-      const templates = isFormal ? DEMO_FORMAL : DEMO_CASUAL;
+    try {
+      let finalProductName = productName.trim();
+      let productInfo: Record<string, string> | undefined;
+
+      // If URL mode: scrape first
+      if (inputMode === 'url') {
+        try {
+          const scraped = await scrapeProduct(productUrl.trim());
+          finalProductName = scraped.title !== 'Tidak ditemukan' ? scraped.title : productUrl.trim();
+          productInfo = {
+            title: scraped.title,
+            description: scraped.description,
+            body_text: scraped.body_text,
+          };
+        } catch (err) {
+          addToast('⚠️ Gagal scraping URL, lanjut dengan URL sebagai nama produk', 'warning');
+          finalProductName = productUrl.trim();
+        }
+      }
+
+      const result = await generateScript({
+        productName: finalProductName,
+        productUrl: inputMode === 'url' ? productUrl.trim() : undefined,
+        provider,
+        duration,
+        style,
+        audience,
+        apiKey,
+        product_info: productInfo,
+      });
 
       const script = {
-        versionA: templates.versionA.replace(/\{\{PRODUCT\}\}/g, productName.trim()),
-        versionB: templates.versionB.replace(/\{\{PRODUCT\}\}/g, productName.trim()),
-        caption: templates.caption.replace(/\{\{PRODUCT\}\}/g, productName.trim()),
-        productName: productName.trim(),
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        script: result.script,
+        caption: result.caption,
+        productName: finalProductName,
         style,
         duration,
         audience,
+        createdAt: new Date().toISOString(),
       };
 
-      dispatch({ type: 'SET_LAST_SCRIPT', script });
+      dispatch({ type: 'ADD_SCRIPT_TO_HISTORY', script });
+      // Sync ke backend SQLite
+      saveScriptToHistory({
+        id: script.id,
+        script: script.script,
+        caption: script.caption,
+        product_name: script.productName,
+        style: script.style,
+        duration: script.duration,
+        audience: script.audience,
+        created_at: script.createdAt,
+      }).catch(() => {});
       setLoading(false);
       addToast('✨ Naskah berhasil digenerate!');
-    }, 1500);
-  };
-
-  const handleCopyVersionA = () => {
-    if (state.lastScript) {
-      navigator.clipboard.writeText(state.lastScript.versionA);
-      addToast('📋 Version A disalin!');
+    } catch (err) {
+      setLoading(false);
+      if (err instanceof ApiError) {
+        addToast(`❌ ${err.message}`, 'error');
+      } else {
+        addToast('❌ Gagal generate naskah. Coba lagi.', 'error');
+      }
     }
   };
 
-  const handleCopyVersionB = () => {
-    if (state.lastScript) {
-      navigator.clipboard.writeText(state.lastScript.versionB);
-      addToast('📋 Version B disalin!');
+  const handleCopyScript = () => {
+    if (latestScript) {
+      navigator.clipboard.writeText(latestScript.script);
+      addToast('📋 Naskah disalin!');
     }
   };
 
   const handleCopyCaption = () => {
-    if (state.lastScript) {
-      navigator.clipboard.writeText(state.lastScript.caption);
+    if (latestScript) {
+      navigator.clipboard.writeText(latestScript.caption);
       addToast('📋 Caption disalin!');
     }
   };
 
-  const handleUseInEditor = () => {
-    if (state.lastScript) {
-      dispatch({ type: 'SET_SCRIPT_TEXT', text: state.lastScript.versionA });
+  const handleUseInEditor = (script = latestScript) => {
+    if (script) {
+      dispatch({ type: 'SET_SCRIPT_TEXT', text: script.script });
       addToast('➡️ Naskah dikirim ke Video Editor!');
       router.push('/');
     }
+  };
+
+  const handleDeleteFromHistory = (id: string) => {
+    dispatch({ type: 'REMOVE_SCRIPT_FROM_HISTORY', id });
+    deleteScriptFromHistory(id).catch(() => {});
+    addToast('🗑️ Naskah dihapus dari riwayat');
+  };
+
+  const handleClearHistory = () => {
+    dispatch({ type: 'CLEAR_SCRIPT_HISTORY' });
+    addToast('🗑️ Semua riwayat naskah dihapus');
   };
 
   return (
@@ -128,8 +166,10 @@ export default function ScriptGeneratorPage() {
 
       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4 mb-4">
         <ProductInput
+          mode={inputMode}
           productName={productName}
           productUrl={productUrl}
+          onModeChange={setInputMode}
           onNameChange={setProductName}
           onUrlChange={setProductUrl}
         />
@@ -147,14 +187,20 @@ export default function ScriptGeneratorPage() {
         />
       </div>
 
-      <ContentRules />
+      <div className="mb-4">
+        <ScriptOutput
+          script={latestScript}
+          onCopyScript={handleCopyScript}
+          onCopyCaption={handleCopyCaption}
+          onUseInEditor={() => handleUseInEditor()}
+        />
+      </div>
 
-      <ScriptOutput
-        script={state.lastScript}
-        onCopyVersionA={handleCopyVersionA}
-        onCopyVersionB={handleCopyVersionB}
-        onCopyCaption={handleCopyCaption}
-        onUseInEditor={handleUseInEditor}
+      <ScriptHistory
+        history={state.scriptHistory}
+        onUseInEditor={(script) => handleUseInEditor(script)}
+        onDelete={handleDeleteFromHistory}
+        onClearAll={handleClearHistory}
       />
     </div>
   );

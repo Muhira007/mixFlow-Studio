@@ -23,7 +23,7 @@ export function ConfigSelects({
   onGenerate,
 }: Props) {
   return (
-    <Card header="⚙️ Konfigurasi Naskah" icon="⚙️">
+    <Card header="Konfigurasi Naskah" icon="⚙️">
       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3 mb-3.5">
         <div>
           <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
@@ -35,7 +35,7 @@ export function ConfigSelects({
             onChange={(e) => onProviderChange(e.target.value)}
           >
             {AI_PROVIDERS.map((p) => (
-              <option key={p.value}>{p.label}</option>
+              <option key={p.value} value={p.value}>{p.label}</option>
             ))}
           </select>
         </div>
@@ -50,7 +50,7 @@ export function ConfigSelects({
             onChange={(e) => onDurationChange(e.target.value)}
           >
             {DURATIONS.map((d) => (
-              <option key={d.value}>{d.label}</option>
+              <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </select>
         </div>
@@ -67,7 +67,7 @@ export function ConfigSelects({
             onChange={(e) => onStyleChange(e.target.value)}
           >
             {STYLES.map((s) => (
-              <option key={s.value}>{s.label}</option>
+              <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
         </div>
@@ -82,7 +82,7 @@ export function ConfigSelects({
             onChange={(e) => onAudienceChange(e.target.value)}
           >
             {AUDIENCES.map((a) => (
-              <option key={a.value}>{a.label}</option>
+              <option key={a.value} value={a.value}>{a.label}</option>
             ))}
           </select>
         </div>

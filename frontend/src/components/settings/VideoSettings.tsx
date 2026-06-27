@@ -17,7 +17,7 @@ export function VideoSettings({
   onMinKeepChange, onFormatChange, onCodecChange,
 }: Props) {
   return (
-    <Card header="🎬 Pengaturan Video" icon="🎬">
+    <Card header="Pengaturan Video" icon="🎬">
       <div className="grid grid-cols-3 max-md:grid-cols-1 gap-3">
         <div>
           <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">

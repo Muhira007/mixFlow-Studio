@@ -40,13 +40,24 @@ export const DURATIONS = [
   { value: '90', label: '90 detik (~330 kata)' },
 ] as const;
 
-// Language styles
+// Language styles (Gaya Bahasa)
 export const STYLES = [
-  { value: 'casual', label: '💬 Casual & Menarik' },
-  { value: 'formal', label: '📋 Formal & Informatif' },
-  { value: 'humor', label: '😂 Humor / Lucu' },
-  { value: 'motivasi', label: '💪 Motivasi / Inspiratif' },
-  { value: 'fomo', label: '😱 FOMO / Urgency' },
+  { value: 'santai-gaul', label: '😎 Santai & Gaul (Gen-Z)' },
+  { value: 'hard-selling', label: '🔥 Hard Selling (FOMO)' },
+  { value: 'storytelling', label: '📖 Storytelling (Bercerita)' },
+  { value: 'edukasi', label: '🎓 Edukasi & Pakar' },
+  { value: 'savage-lucu', label: '😈 Savage & Lucu' },
+  { value: 'asmr', label: '🧘 ASMR / Calming' },
+  { value: 'elegan-mewah', label: '✨ Elegan & Mewah' },
+  { value: 'misteri', label: '🕵️ Misteri (Bikin Penasaran)' },
+  { value: 'curhat-pov', label: '💌 Curhat / POV' },
+  { value: 'brutal-review', label: '🗿 Jujur & Brutal Review' },
+  { value: 'challenge', label: '🎯 Tantangan (Challenge)' },
+  { value: 'tips-hacks', label: '💡 Tips & Hacks' },
+  { value: 'breaking-news', label: '📰 Breaking News' },
+  { value: 'pantun', label: '🎭 Pantun / Rima' },
+  { value: 'motivasi', label: '💪 Motivasi / Inspiring' },
+  { value: 'ngerap', label: '🎤 Ngerap / Cepat' },
 ] as const;
 
 // Target audiences
@@ -58,12 +69,6 @@ export const AUDIENCES = [
   { value: 'kantor', label: '👨‍💻 Pekerja Kantoran' },
 ] as const;
 
-// Voice options
-export const VOICES = [
-  { value: 'rina', label: '🇮🇩 Rina — Indonesia Female' },
-  { value: 'budi', label: '🇮🇩 Budi — Indonesia Male' },
-  { value: 'rachel', label: '🇺🇸 Rachel — English Female' },
-] as const;
 
 // Output formats
 export const OUTPUT_FORMATS = [

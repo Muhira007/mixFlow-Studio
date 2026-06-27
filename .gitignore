@@ -31,6 +31,15 @@ __pycache__/
 .vscode/
 .idea/
 
+# Database & user data (jangan commit!)
+backend/data/
+
+# Logs
+logs/
+
+# Next.js build
+.next/
+
 # OS
 .DS_Store
 Thumbs.db

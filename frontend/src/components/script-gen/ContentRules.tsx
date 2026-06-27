@@ -4,7 +4,7 @@ import { CONTENT_RULES_FORBIDDEN, CONTENT_RULES_ALLOWED } from '@/lib/constants'
 export function ContentRules() {
   return (
     <Card
-      header="⚠️ Aturan Konten (otomatis di system prompt)"
+      header="Aturan Konten (otomatis di system prompt)"
       icon="⚠️"
       className="border-l-[3px] border-l-[var(--warning)]"
     >

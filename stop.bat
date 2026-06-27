@@ -1,26 +1,24 @@
 @echo off
-chcp 65001 >nul
-title mixFlow — Stopping...
-
+title mixFlow - Stop All Services
+color 0C
 echo ============================================
-echo   mixFlow — Stopping all services...
+echo   mixFlow -- Stop via WSL
 echo ============================================
 echo.
+echo Menghentikan semua service...
+echo.
+echo Langkah otomatis:
+echo   1. Kill via PID file
+echo   2. Bersihkan port 3000 ^& 8000 (force)
+echo   3. Sapu stray next-server ^& uvicorn
+echo.
 
-REM ── Kill uvicorn (backend) ──
-echo [1/2] Stopping Backend...
-wsl -e bash -c "pkill -f 'uvicorn app.main:app' 2>/dev/null && echo '  ✅ Backend stopped' || echo '  ⚠️ Backend was not running'"
-
-REM ── Kill next dev (frontend) ──
-echo [2/2] Stopping Frontend...
-wsl -e bash -c "pkill -f 'next dev' 2>/dev/null && echo '  ✅ Frontend stopped' || echo '  ⚠️ Frontend was not running'"
-
-REM ── Clean up any remaining node/python on WSL ──
-wsl -e bash -c "pkill -f 'node.*next' 2>/dev/null; pkill -f 'python.*uvicorn' 2>/dev/null"
+wsl -d Ubuntu-26.04 --cd "/home/kangdemuh/tester/mixflow" bash -c "./stop-all.sh"
 
 echo.
 echo ============================================
-echo   ✅ All mixFlow services stopped.
+echo   Semua service telah dihentikan.
 echo ============================================
 echo.
-pause
+echo Tekan tombol apa saja untuk menutup jendela ini...
+pause >nul

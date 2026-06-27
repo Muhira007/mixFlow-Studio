@@ -1,31 +1,33 @@
 @echo off
-chcp 65001 >nul
-title mixFlow — Starting...
-
+title mixFlow - Start All Services
+color 0B
 echo ============================================
-echo   mixFlow — AI Video Editor
-echo   Starting backend + frontend...
+echo   mixFlow -- Start via WSL
 echo ============================================
 echo.
+echo Memeriksa &amp; membersihkan port sebelum start...
+echo (Port 3000 = Frontend / Port 8000 = Backend)
+echo.
+echo Setiap start akan otomatis:
+echo   1. Cek port 3000 ^& 8000 apakah dipakai
+echo   2. Kalau dipakai -> bunuh proses lama
+echo   3. Bersihkan cache Next.js
+echo   4. Jalankan service baru
+echo.
+echo ============================================
+echo.
 
-REM ── Backend (FastAPI :8000) ──
-echo [1/2] Starting Backend on http://localhost:8000
-start "mixFlow Backend" wsl -e bash -c "cd ~/tester/mixflow/backend && source .venv/bin/activate && echo '🔧 Backend starting on :8000...' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload; exec bash"
-
-REM ── Frontend (Next.js :3000) ──
-echo [2/2] Starting Frontend on http://localhost:3000
-start "mixFlow Frontend" wsl -e bash -c "cd ~/tester/mixflow/frontend && echo '🎨 Frontend starting on :3000...' && npm run dev; exec bash"
+wsl -d Ubuntu-26.04 --cd "/home/kangdemuh/tester/mixflow" bash -c "./start-all.sh"
 
 echo.
 echo ============================================
-echo   ✅ mixFlow is starting!
-echo.
-echo   Backend  → http://localhost:8000
-echo   Docs     → http://localhost:8000/docs
-echo   Frontend → http://localhost:3000
-echo.
-echo   Close the WSL windows to stop.
-echo   Or run: stop.bat
+echo   Semua service berjalan di background!
 echo ============================================
 echo.
-pause
+echo  Frontend : http://localhost:3000
+echo  API Docs : http://localhost:8000/docs
+echo  Logs     : logs\  (di direktori proyek)
+echo.
+echo Tekan tombol apa saja untuk menutup jendela ini.
+echo (Service TETAP berjalan -- aman ditutup!)
+pause >nul

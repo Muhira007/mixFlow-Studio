@@ -2,127 +2,58 @@
 
 **Nama Proyek:** mixFlow  
 **Jenis:** Web Application — Next.js (Frontend) + FastAPI (Backend)  
-**Deskripsi:** Aplikasi all-in-one untuk content creator affiliate — menggabungkan AI Script Generator untuk membuat naskah video pendek (TikTok/Shopee) dengan Video Editor yang dilengkapi Text-to-Speech (Eleven Labs) dan adaptive trim otomatis.
+**Deskripsi:** Aplikasi all-in-one untuk content creator affiliate — menggabungkan AI Script Generator untuk membuat naskah video pendek dengan Video Editor yang dilengkapi Text-to-Speech (Eleven Labs) dan adaptive trim otomatis.
 
 ---
 
 ## 1. Target Pengguna
 
-Content creator affiliate di platform:
-- TikTok Shop
-- Shopee Video
-- Shopee Live (short video)
+Content creator affiliate di platform video pendek:
+- TikTok Shop / Shopee Video
+- Konten promosi produk (review, unboxing, hard-selling)
 
 ## 2. Fitur Inti
 
-### A. AI Script Generator (Panel 1)
+### A. AI Script Generator
 Membuat naskah voice-over video pendek untuk promosi produk affiliate secara otomatis menggunakan AI.
 
 | Fitur | Deskripsi |
 |---|---|
-| **Input Nama Produk** | User memasukkan nama produk yang akan dipromosikan |
-| **Input URL Produk** _(opsional)_ | Scraping halaman produk untuk mendapatkan konteks (judul, deskripsi) |
-| **Pilih AI Provider** | DeepSeek (`deepseek-v4-flash`), Google Gemini (`gemini-3.5-flash`), OpenAI (`gpt-5.4-mini`) |
-| **Pilih Durasi Video** | 15 detik, 30 detik, 60 detik, 90 detik (mempengaruhi panjang naskah) |
-| **Pilih Gaya Bahasa** | Casual & Menarik, Formal, Humor, dll |
-| **Pilih Target Audiens** | Umum, Ibu Rumah Tangga, Gen Z, Milenial, dll |
-| **Output** | JSON: `versionA` (Hard-Selling), `versionB` (Storytelling), `caption` |
+| **Input Produk** | By Nama Produk (teks) atau By URL (auto-scrape judul + deskripsi) |
+| **AI Provider** | DeepSeek (`deepseek-v4-flash`), Google Gemini (`gemini-3.5-flash`), OpenAI (`gpt-5.4-mini`) |
+| **Durasi Video** | 15, 30, 60, 90 detik — target kata: 55, 110, 220, 330 |
+| **Gaya Bahasa** | 16 opsi: Santai & Gaul, Hard Selling, Storytelling, Edukasi, Savage, ASMR, Elegan, Misteri, Curhat, Brutal Review, Challenge, Tips & Hacks, Breaking News, Pantun, Motivasi, Ngerap |
+| **Target Audiens** | Umum, Ibu Rumah Tangga, Gen Z, Milenial, Pekerja Kantoran |
+| **Output** | Single naskah natural + caption + hashtag |
+| **Riwayat** | Semua naskah tersimpan di SQLite, bisa dipakai ulang di Video Editor |
 
-**Aturan Konten Naskah** (hard-coded di system prompt):
-- DILARANG menyebut nama marketplace (Shopee, Tokopedia, Lazada, TikTok Shop, dll)
-- DILARANG menyebut nama media sosial (Instagram, IG, Facebook, FB, YouTube, YT, TikTok, X, Twitter, dll)
-- DILARANG menggunakan "Klik link di bio!" atau "keranjang kuning"
-- Gunakan CTA afiliator: "cek keranjang di bawah video ini" atau "klik tautan di bawah"
-- Format paragraf pendek (2-3 kalimat per paragraf), dipecah sebagai array
+**Aturan Konten** (hard-coded di system prompt):
+- DILARANG menyebut nama marketplace
+- DILARANG menyebut nama media sosial
+- DILARANG menggunakan "klik link di bio" atau "keranjang kuning"
+- CTA: "cek keranjang di bawah video ini" atau "klik tautan di bawah"
 
-### B. Video Editor (Panel Utama)
-Menggabungkan footage video + voice-over TTS menjadi satu video short vertical siap upload.
+### B. Video Editor
+Menggabungkan footage video + voice-over TTS menjadi satu video short vertical.
 
 | Fitur | Deskripsi |
 |---|---|
-| **Upload Footage** | Multi-file upload (.mp4, .mov, .avi), bisa drag & drop |
-| **Sumber Naskah** | Pilih: **Dari Teks** (tulis/paste naskah → TTS) ATAU **Dari Audio** (upload file .mp3/.wav langsung, skip TTS) |
-| **Auto-Analyze** | Deteksi blur (Laplacian variance) & guncangan (frame diff) per footage |
-| **Adaptive Trim** | Potong otomatis bagian awal/akhir yang jelek, durasi menyesuaikan durasi audio (TTS atau upload) |
-| **TTS Generation** | Text-to-Speech via Eleven Labs API (hanya jika sumber naskah = "Dari Teks") |
-| **Concat + Render** | Gabung footage + overlay audio → output vertical 9:16 |
-| **Output Resolusi** | Pilih: **1080×1920** (Full HD) atau **720×1280** (HD, render lebih cepat) — H.264 |
+| **Upload Footage** | Multi-file, drag & drop, thumbnail preview, sort (upload/name/size/date), number labels |
+| **Sumber Naskah** | Dari Teks (tulis/paste → TTS) atau Dari Audio (upload + library hasil TTS) |
+| **TTS Generation** | ElevenLabs API — generate dari teks, preview audio di pipeline |
+| **Audio Library** | List 5 file audio terbaru (hasil TTS + upload), preview play, pilih untuk render |
+| **Progress Pipeline** | 6-step: Upload → TTS → Analyze → Trim → Concat → Render |
+| **Output Resolusi** | 1080×1920 (Full HD) atau 720×1280 (HD) — H.264 |
 
-**Constraint Adaptive Trim:**
-- Setiap footage minimal tersisa **3 detik** bagian bagus
-- Pemangkasan proporsional: footage panjang kena pangkas lebih besar
-- Total durasi video akhir ≈ durasi audio TTS
-
-**Strategi High-Resolution Source (4K / 2.7K / >1080p):**
-
-Alur otomatis — transparan ke user:
-
-```
-Upload Footage
-      │
-      ▼
-[Deteksi Resolusi] ──→ ≤1080p ──→ Langsung masuk pipeline ◀────────────┐
-      │                                                                  │
-      ▼                                                                  │
-  >1080p (4K, 2.7K, dsb.)                                               │
-      │                                                                  │
-      ▼                                                                  │
-[FFmpeg Pre-process]                                                     │
-  • Decode 4K → scale + pad ke 1080×1920                                  │
-  • Preset: "fast", CRF 23                                                │
-  • Durasi: ~10-20 detik untuk 15s clip                                   │
-  • Output: proxy_<original_name>_1080p.mp4                               │
-      │                                                                  │
-      ▼                                                                  │
-[1080p Proxy] ───────────────────────────────────────► masuk pipeline ───┘
-```
-
-**Aturan:**
-1. **Auto-detect:** Cek resolusi tiap footage menggunakan FFprobe. Threshold: lebar >1080 ATAU tinggi >1920.
-2. **Auto-proxy:** Footage di atas threshold otomatis di-pre-process ke 1080p proxy.
-3. **Semua tahap berikutnya** (analyze, trim, concat, render) berjalan di 1080p proxy — BUKAN di 4K asli.
-4. **File asli tidak disentuh** — disimpan di `uploads/`, proxy di `uploads/proxy/`.
-5. **User tidak perlu tahu** — progress bar menunjukkan "Pre-processing footage..." di awal, sisanya sama.
-6. **Hasil akhir tidak beda** — TikTok/Shopee kompres berat, 4K→1080p vs native 1080p tidak terlihat.
-
-**Kenapa tidak langsung 4K:**
-- Decode 4K (8.3 MP/frame) + OpenCV + encode 1080p bersamaan = CPU 100%, thermal throttle 91°C.
-- Proxy 1080p (2.1 MP/frame) = 4× lebih ringan di semua tahap.
-- Satu kali decode 4K di awal (pre-process) jauh lebih murah daripada decode 4K di setiap tahap pipeline.
-
-**Benefit untuk hardware development (i5-8365U):**
-| Tahap | Tanpa Proxy (4K) | Dengan Proxy (1080p) |
-|---|---|---|
-| Pre-process | — | 10-20 detik/clip |
-| Analyze (4 file) | 40-80 detik | 10-20 detik |
-| Render (60s) | 15-30 menit | 3-7 menit |
-| **Total** | **16-32 menit** | **4-8 menit** |
-
-**Parameter Encoding (FFmpeg libx264):**
-
-| Tahap | Preset | CRF | Tujuan |
-|---|---|---|---|
-| **Proxy** (4K→1080p) | `veryfast` | 23 | File sementara, kecepatan prioritas |
-| **Render Final** (1080p) | `medium` | 20 | Output akhir user, kualitas baik |
-| **Render Final** (720p) | `fast` | 22 | Resolusi rendah, tidak perlu agresif |
-
-**Catatan CRF vs Preset:**
-- **CRF** mengontrol kualitas visual (0=lossless, 51=terburuk). Rentang rekomendasi: 18-23.
-- **Preset** mengontrol kecepatan encode vs efisiensi kompresi. Pada CRF yang sama, `fast` dan `slow` hasilkan **kualitas visual hampir identik** — yang beda cuma ukuran file.
-- CRF 23 vs 20 di layar HP (TikTok/Shopee): **tidak ada perbedaan kasat mata** — platform mengompres ulang dengan bitrate rendah (~2-4 Mbps). CRF 23 sudah overkill untuk output final.
-- Proxy pakai `veryfast`: file ~15-20% lebih besar dari `medium`, tapi tidak relevan karena file sementara.
-
-### C. Settings (Panel 3)
-Konfigurasi API keys untuk semua layanan eksternal:
-
-| Key | Layanan |
+### C. Settings & Voice Manager
+| Fitur | Deskripsi |
 |---|---|
-| `ELEVENLABS_API_KEY` | Text-to-Speech |
-| `DEEPSEEK_API_KEY` | AI Script Generator (DeepSeek) |
-| `GEMINI_API_KEY` | AI Script Generator (Google Gemini) |
-| `OPENAI_API_KEY` | AI Script Generator (OpenAI) |
-| `ELEVENLABS_VOICE_ID` | Voice default untuk TTS |
-| `MIN_KEEP_DURATION` | Minimal durasi per footage (default: 3 detik) |
+| **API Keys** | ElevenLabs, DeepSeek, Gemini, OpenAI — semua tersimpan di SQLite |
+| **Voice Manager** | Multi-voice: nama, Voice ID, bahasa (13 opsi), gender, label (8 opsi) |
+| **Audio Sample** | Upload sample suara per voice → play preview → persistent di disk |
+| **Video Settings** | Min keep duration, output format, video codec |
+| **Content Rules** | Aturan konten yang di-inject ke system prompt AI |
+| **Danger Zone** | Hapus footage, hapus output, hapus semua audio TTS, reset semua |
 
 ---
 
@@ -132,331 +63,129 @@ Konfigurasi API keys untuk semua layanan eksternal:
 
 ```mermaid
 flowchart TD
-    A[🎬 User Buka mixFlow] --> B{Punya Naskah?}
-    B -- Tidak --> C[Panel: Script Generator]
-    C --> C1[Input Nama Produk]
-    C1 --> C2[Pilih AI Provider]
-    C2 --> C3[Pilih Durasi & Tone]
-    C3 --> C4[Generate Naskah]
-    C4 --> C5[Copy Naskah ✅]
+    A[🎬 User Buka mixFlow] --> B{API Key sudah?}
+    B -- Belum --> S1[Settings: Isi API Key]
+    S1 --> S2[Tambah Voice TTS]
+    S2 --> C
 
-    B -- Ya --> D[Panel: Video Editor]
-    C5 --> D
+    B -- Sudah --> C{Punya Naskah?}
+    C -- Tidak --> G[Script Generator]
+    G --> G1[Input Produk]
+    G1 --> G2[Generate Naskah via AI]
+    G2 --> G3[Naskah siap ✅]
 
-    D --> D0{Pilih Sumber Naskah}
-    D0 -- Dari Teks --> D1[Upload Footage]
-    D1 --> D2[Tulis/Paste Naskah]
-    D2 --> D3[Generate TTS]
-    D0 -- Dari Audio --> D1a[Upload Footage]
-    D1a --> D2a[Upload Audio .mp3/.wav]
-    D2a --> D3a[Ambil Durasi Audio]
+    C -- Ya --> V[Video Editor]
+    G3 --> V
 
-    D3 --> D4[Analyze Footage]
-    D3a --> D4
-    D4 --> D5[Adaptive Trim]
-    D5 --> D6[Concat Clips]
-    D6 --> D7[Render Final<br/>1080p atau 720p]
-    D7 --> E[📥 Download .mp4]
-    E --> F[📤 Upload ke TikTok/Shopee]
+    V --> V1[Upload Footage]
+    V1 --> V2[Tulis/Paste Naskah]
+    V2 --> V3[Generate TTS]
+    V3 --> V4{Preview OK?}
+    V4 -- Ya --> V5[Analyze + Trim + Render]
+    V4 -- Tidak --> V3
+    V5 --> D[📥 Download .mp4]
 ```
 
-### 3.2 Detail Flow Adaptive Trim (Inti Video Editor)
-
-```mermaid
-flowchart TD
-    subgraph INPUT[Input]
-        A1[Upload Footage<br/>1.mp4, 2.mp4, ...N.mp4]
-        A2{Pilih Sumber Naskah}
-        A2 -- Dari Teks --> A3[Naskah VO]
-        A2 -- Dari Audio --> A4[Upload Audio .mp3/.wav]
-    end
-
-    subgraph TTS[TTS Engine]
-        B1[Eleven Labs API]
-        B2[Audio .mp3<br/>+ Target Durasi]
-    end
-
-    subgraph ANALYZE[Frame Analysis per Footage]
-        C1[Deteksi Blur<br/>Laplacian Variance]
-        C2[Deteksi Guncangan<br/>Frame Diff]
-        C3[Tentukan Good Segment<br/>start → end per footage]
-    end
-
-    subgraph TRIM[Adaptive Trim Algorithm]
-        D1[Hitung Total Good Duration]
-        D2{Bandingkan dengan<br/>Target Durasi Audio}
-        D2 -- Total > Target --> D3[Distribusi Pemangkasan<br/>Proporsional]
-        D3 --> D4{Cek Constraint<br/>Min 3 detik/footage}
-        D4 -- Ada yang masih > 3dtk --> D5[Potong lagi<br/>dari yang terpanjang]
-        D5 --> D4
-        D4 -- Semua sudah pas --> D6[✅ Durasi Match]
-        D2 -- Pas/Toleransi --> D6
-        D2 -- Total < Target --> D7[⚠️ Warning: Kurang]
-    end
-
-    subgraph OUTPUT[Render]
-        E1[Concat Semua Klip]
-        E2[Resize 9:16<br/>1080×1920 atau 720×1280]
-        E3[Overlay Audio TTS/Upload]
-        E4[Write .mp4 Final]
-    end
-
-    A1 --> C1
-    A3 --> B1 --> B2
-    A4 --> B2
-    B2 -- target_durasi --> D2
-    C1 --> C3
-    C2 --> C3
-    C3 --> D1 --> D2
-    D6 --> E1 --> E2 --> E3 --> E4
-    D7 --> E4
-```
-
-### 3.3 Arsitektur Aplikasi (Next.js + FastAPI)
+### 3.2 Flow Script Generator
 
 ```mermaid
 flowchart LR
-    subgraph BROWSER[Browser]
-        NX[Next.js Frontend<br/>React Components]
-    end
+    A[Input Produk] --> B{Mode}
+    B -->|By Nama| C[Generate Naskah]
+    B -->|By URL| D[Scrape URL]
+    D --> E[Title + Description]
+    E --> C
 
-    subgraph NEXT[Next.js Server]
-        API[API Routes<br/>proxy layer]
-        SS[Server-Side<br/>Rendering]
-    end
+    C --> F{Pilih AI}
+    F -->|DeepSeek| G[api.deepseek.com]
+    F -->|Gemini| H[Google AI]
+    F -->|OpenAI| I[api.openai.com]
 
-    subgraph BACKEND[FastAPI Backend - Python]
-        M1[script_generator.py<br/>DeepSeek / Gemini / OpenAI]
-        M2[scraper.py<br/>Product URL Parser]
-        M3[tts.py<br/>Eleven Labs TTS]
-        M4[video_processor.py<br/>Analyze + Adaptive Trim + Concat]
-        M5[renderer.py<br/>Final Render]
-    end
+    G --> J[Parse Output]
+    H --> J
+    I --> J
 
-    subgraph EXTERNAL[External APIs]
-        E1[Eleven Labs<br/>Text-to-Speech]
-        E2[DeepSeek API<br/>deepseek-v4-flash]
-        E3[Gemini API<br/>gemini-3.5-flash]
-        E4[OpenAI API<br/>gpt-5.4-mini]
-    end
-
-    NX <-->|REST / fetch| API
-    API <-->|REST| BACKEND
-    M1 --> E2
-    M1 --> E3
-    M1 --> E4
-    M2 --> E2
-    M2 --> E3
-    M2 --> E4
-    M3 --> E1
-    M4 --> M5
+    J --> K[(SQLite)]
+    K --> L[Tampil + Riwayat]
 ```
 
-**Alur Komunikasi:**
-1. **Next.js Frontend** ← tampilan UI (React components), semua interaksi user di sini
-2. **Next.js API Routes** → proxy tipis yang meneruskan request ke FastAPI backend (menyembunyikan URL backend, handling CORS)
-3. **FastAPI Backend** → semua heavy processing: video (moviepy/OpenCV), TTS (Eleven Labs), AI script generation, scraping
-4. File upload: Frontend → FastAPI langsung (multipart/form-data), Next.js tidak ikut memproses file besar
+### 3.3 Arsitektur Aplikasi
 
-### 3.4 Alur Script Generator
+```mermaid
+flowchart LR
+    subgraph Browser[Windows Browser]
+        FE[Next.js 16<br/>React 19<br/>Tailwind CSS 4]
+    end
+
+    subgraph WSL[WSL Ubuntu]
+        BE[FastAPI<br/>Python 3.14<br/>Uvicorn]
+        DB[(SQLite<br/>mixflow.db)]
+        FS[Disk<br/>outputs/ samples/ uploads/]
+    end
+
+    subgraph Cloud[External APIs]
+        EL[Eleven Labs]
+        DS[DeepSeek]
+        GM[Gemini]
+        OA[OpenAI]
+    end
+
+    FE <-->|REST| BE
+    BE <--> DB
+    BE <--> FS
+    BE --> EL
+    BE --> DS
+    BE --> GM
+    BE --> OA
+```
+
+### 3.4 Flow Penyimpanan Data
 
 ```mermaid
 flowchart TD
-    A[Input: Nama Produk] --> B{Pakai URL?}
-    B -- Ya --> C[Scrape URL Produk<br/>requests + BeautifulSoup]
-    C --> D[Ambil Title + Description]
+    subgraph Save[SAVE]
+        A1[API Key] -->|POST /api/sync/api-key| B1[(SQLite)]
+        A2[Voice] -->|POST /api/voices| B1
+        A3[Audio Sample] -->|POST /api/voices/:id/sample| C[Disk]
+        A4[Naskah] -->|POST /api/sync/script| B1
+    end
 
-    B -- Tidak --> D
-    D --> E{Pilih AI Provider}
-
-    E -- DeepSeek --> F1[POST api.deepseek.com<br/>deepseek-v4-flash]
-    E -- Gemini --> F2[GoogleGenAI SDK<br/>gemini-3.5-flash]
-    E -- OpenAI --> F3[POST api.openai.com<br/>gpt-5.4-mini]
-
-    F1 --> G[Parse JSON Output]
-    F2 --> G
-    F3 --> G
-
-    G --> H{JSON Valid?}
-    H -- Ya --> I[Output:<br/>versionA - Hard Selling<br/>versionB - Storytelling<br/>caption - Caption + Hashtag]
-    H -- Tidak --> J[Retry / Fallback]
-
-    I --> K[Copy ke Video Editor]
+    subgraph Load[LOAD]
+        B1 -->|GET /api/sync| D[Frontend State]
+    end
 ```
 
 ---
 
 ## 4. Tech Stack
 
-### 4.1 Frontend (Next.js)
-
-| Kategori | Teknologi | Alasan |
-|---|---|---|
-| **Framework** | Next.js 15 (App Router) | File-based routing, SSR/SSG, API Routes, deployment mudah (Vercel) |
-| **UI Library** | React 19 | Komponen interaktif, state management, hooks |
-| **Styling** | Tailwind CSS 4 | Utility-first, dark theme mudah, responsive mobile-first, mirip desain mockup |
-| **State** | React Context + useReducer | API keys & session state, tidak butuh Redux untuk skala ini |
-| **HTTP Client** | Fetch API native | Ringan, tidak perlu Axios untuk 1 backend |
-| **File Upload** | `<input type="file">` + FormData | Upload footage langsung ke FastAPI backend |
-| **Animasi** | CSS Transitions + framer-motion | Progress pipeline, toast, transisi panel |
-| **Icons** | Lucide React / Emoji | Ikon ringan, konsisten |
-
-**Catatan:** Tidak menggunakan Next.js API Routes untuk video processing — hanya sebagai proxy tipis untuk menyembunyikan URL backend. File upload footage langsung dari browser ke FastAPI (bypass Next.js) supaya tidak membebani server Node.js.
-
-### 4.2 Backend (FastAPI — Python)
-
-| Kategori | Teknologi | Alasan |
-|---|---|---|
-| **Framework** | FastAPI | Async support, auto OpenAPI docs, performa tinggi |
-| **Video Processing** | moviepy + OpenCV | Industri standar untuk manipulasi video di Python |
-| **Text-to-Speech** | Eleven Labs Python SDK | Official SDK, chunking teks panjang |
-| **AI Script Gen** | HTTP REST calls (httpx) | DeepSeek API, Google GenAI SDK, OpenAI SDK |
-| **Web Scraping** | requests + BeautifulSoup4 | Ringan, cukup untuk parse HTML produk |
-| **Image Processing** | Pillow | Resize/crop frame |
-| **Config/Env** | pydantic-settings + .env | Type-safe config, 12-factor app |
-| **CORS** | fastapi.middleware.cors | Whitelist Next.js origin |
-
-### 4.3 Mengapa Tidak Pakai Node.js Backend?
-
-| Pertimbangan | Keputusan |
+| Layer | Teknologi |
 |---|---|
-| **Video processing** | moviepy & OpenCV hanya ada di Python — tidak ada alternatif Node.js yang setara |
-| **TTS SDK** | Eleven Labs Python SDK lebih mature dibanding JS SDK |
-| **Ekosistem AI** | Python adalah first-class citizen untuk AI/ML library |
-| **Kompleksitas** | Menambah Node.js backend = 3 runtime (Node + Python + Browser) tanpa manfaat jelas |
-| **Kesimpulan** | ✅ **Skip Node.js backend** — Next.js (frontend) + FastAPI (backend) sudah cukup |
+| **Frontend** | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
+| **Backend** | FastAPI, Python 3.14, Uvicorn |
+| **Database** | SQLite (single file, no server, WAL mode) |
+| **AI** | DeepSeek v4 Flash, Google Gemini 3.5 Flash, OpenAI GPT |
+| **TTS** | ElevenLabs Multilingual v2 |
+| **Video** | FFmpeg, OpenCV, moviepy |
+| **Infra** | WSL2 Ubuntu, Windows 10/11 |
 
 ---
 
-## 5. Arsitektur Frontend (Next.js)
+## 5. Database Schema
 
-### 5.1 Desain Referensi
-
-Desain frontend sudah diimplementasi di `frontend/` (Next.js 16 App Router) dengan acuan:
-- **Tema:** Dark mode penuh (background `#0a0a14`) — vibe video editor profesional
-- **Aksen:** Gradient ungu (`#6c5ce7 → #a855f7`) untuk tombol primary, sidebar active state, glow effects
-- **Layout:** Sidebar (desktop) / Bottom nav (mobile) + Topbar + Content area
-- **Responsive:** 3 breakpoint — ≥1024px (desktop), ≤768px (tablet/mobile), ≤400px (small phone)
-- **Mobile-first:** Sidebar berubah jadi hamburger drawer + bottom navigation bar di layar kecil
-- **Touch-friendly:** Minimum tap target 44px, swipe gesture untuk buka sidebar
-
-### 5.2 Struktur Komponen React
-
-```
-components/
-├── layout/
-│   ├── Sidebar.tsx              # Navigasi desktop (260px, collapse di mobile)
-│   ├── Topbar.tsx               # Breadcrumb + hamburger button (mobile)
-│   ├── BottomNav.tsx            # 4-tab navigasi mobile (fixed bottom)
-│   └── MainLayout.tsx           # Shell: sidebar + topbar + content + bottomnav
-│
-├── editor/
-│   ├── UploadZone.tsx           # Drag & drop footage (.mp4, .mov, .avi) + file chips
-│   ├── ScriptSourceToggle.tsx   # Toggle: "Dari Teks" vs "Dari Audio"
-│   ├── ScriptTextarea.tsx       # Textarea naskah VO (jika sumber = teks)
-│   ├── AudioUploader.tsx        # Upload file audio .mp3/.wav (jika sumber = audio)
-│   ├── VoiceSelector.tsx        # Dropdown suara Eleven Labs
-│   ├── ResolutionSelector.tsx   # Pilih output: 1080×1920 atau 720×1280
-│   ├── ProgressPipeline.tsx     # 6-step progress bar (Upload→TTS→Analyze→Trim→Concat→Render)
-│   ├── AnalysisTable.tsx        # Tabel hasil analisis per footage (blur, shake, good segment)
-│   └── VideoStats.tsx           # Stat cards (footage count, target durasi, output format)
-│
-├── script-gen/
-│   ├── ProductInput.tsx         # Input nama produk + URL (dengan scraper toggle)
-│   ├── ConfigSelects.tsx        # AI provider, durasi, gaya bahasa, target audiens
-│   ├── ContentRules.tsx         # Alert box aturan konten (warning)
-│   └── ScriptOutput.tsx         # Output box: Version A, Version B, Caption + copy buttons
-│
-├── settings/
-│   ├── ApiKeyInput.tsx          # Input password dengan status indikator (connected/missing)
-│   ├── VideoSettings.tsx        # Min duration, output format, codec
-│   └── DangerZone.tsx           # Tombol reset & hapus dengan konfirmasi
-│
-└── shared/
-    ├── Button.tsx               # Variants: primary, success, outline, sizes: sm/md/lg
-    ├── Card.tsx                 # Container card dengan header opsional
-    ├── Toast.tsx                # Notifikasi toast (sukses/error/info)
-    ├── Badge.tsx                # Label kecil (Good/OK/Bad, Hard Sell/Storytelling)
-    └── Switch.tsx               # Toggle on/off
+```sql
+api_keys       (provider TEXT PK, value TEXT)
+settings       (key TEXT PK, value TEXT)
+voices         (id INTEGER PK, name TEXT, voice_id TEXT UNIQUE,
+                language TEXT, gender TEXT, label TEXT, created_at TEXT)
+script_history (id TEXT PK, script TEXT, caption TEXT,
+                product_name TEXT, style TEXT, duration TEXT,
+                audience TEXT, created_at TEXT)
+output_history (id INTEGER PK, name TEXT, duration TEXT,
+                size TEXT, created_at TEXT)
 ```
 
-### 5.3 Routing (Next.js App Router)
-
-```
-app/
-├── layout.tsx                   # Root layout: providers + MainLayout shell
-├── page.tsx                     # Halaman utama → Video Editor
-├── script-generator/
-│   └── page.tsx                 # AI Script Generator
-├── settings/
-│   └── page.tsx                 # API Keys + konfigurasi
-├── outputs/
-│   └── page.tsx                 # History video hasil render
-└── api/
-    └── proxy/
-        └── [...path]/
-            └── route.ts         # Proxy ke FastAPI backend
-```
-
-**Navigasi:**
-| Path | Panel | Sidebar Label |
-|---|---|---|
-| `/` | Video Editor | 🎞️ Video Editor (Main) |
-| `/script-generator` | Script Generator | 🤖 Script Generator |
-| `/settings` | Settings | ⚙️ Settings |
-| `/outputs` | Output Videos | 📁 Output Videos |
-
-### 5.4 State Management (React Context)
-
-Tidak butuh Redux — cukup React Context + useReducer untuk:
-
-```
-AppContext
-├── apiKeys: { elevenlabs, deepseek, gemini, openai }  # dari Settings
-├── uploadedFiles: File[]                                 # footage di Video Editor
-├── scriptSource: 'text' | 'audio'                        # sumber naskah
-├── scriptText: string                                    # naskah VO (jika sumber = text)
-├── uploadedAudio: File | null                            # file audio upload (jika sumber = audio)
-├── selectedVoice: string                                 # suara TTS
-├── pipelineStep: 'idle' | 'upload' | 'tts' | 'analyze' | 'trim' | 'concat' | 'render' | 'done'
-├── analysisResults: AnalysisResult[]                     # hasil analisis footage
-├── outputResolution: '1080×1920' | '720×1280'           # resolusi output
-└── toasts: Toast[]                                       # antrian notifikasi
-```
-
-### 5.5 Alur Data Frontend → Backend
-
-```
-[User klik "Generate TTS"]
-  → POST /api/proxy/tts/generate  { text, voice_id }
-  → Next.js API Route meneruskan ke FastAPI
-  → FastAPI panggil Eleven Labs, return audio_url + durasi
-
-[User klik "Analyze Footage"]
-  → POST /api/proxy/video/analyze  (multipart: footage files)
-  → FastAPI proses dengan OpenCV, return per-file analysis
-
-[User klik "Render"]
-  → POST /api/proxy/video/render  { trim_segments, audio_url }
-  → FastAPI jalankan moviepy concat + overlay audio
-  → Return download URL → tampilkan di Output panel
-```
-
-### 5.6 Mobile-First Strategy
-
-| Breakpoint | Layout | Navigasi |
-|---|---|---|
-| **≥1024px** Desktop | Sidebar 260px + Content | Sidebar tetap terbuka |
-| **769-1023px** Tablet | Sidebar + Content (grid 2 kolom) | Sidebar tetap terbuka |
-| **≤768px** Mobile | Full-width content | ☰ Hamburger drawer + Bottom nav bar |
-| **≤400px** Small | Compact cards, stat vertikal | Bottom nav (icon-only mode) |
-
-**Mobile-specific behaviors:**
-- Swipe kanan dari pinggir kiri → buka sidebar drawer
-- Overlay gelap saat sidebar terbuka → tap overlay = close
-- Tombol aksi jadi full-width, stacked vertical (mudah ditekan jempol)
-- Tabel jadi horizontal scroll native
-- `env(safe-area-inset-bottom)` untuk iPhone notch/home indicator
+**Live DB Browser:** `http://localhost:8000/api/db`
 
 ---
 
@@ -464,189 +193,55 @@ AppContext
 
 ```
 mixflow/
-├── frontend/                        # Next.js app
-│   ├── app/
-│   │   ├── layout.tsx               # Root layout
-│   │   ├── page.tsx                 # Video Editor (main)
-│   │   ├── script-generator/
-│   │   │   └── page.tsx             # AI Script Generator
-│   │   ├── settings/
-│   │   │   └── page.tsx             # API Keys
-│   │   ├── outputs/
-│   │   │   └── page.tsx             # Output history
-│   │   └── api/
-│   │       └── proxy/
-│   │           └── [...path]/
-│   │               └── route.ts     # Proxy ke backend
-│   ├── components/                  # React components (lihat §5.2)
-│   ├── contexts/
-│   │   └── AppContext.tsx           # Global state
-│   ├── lib/
-│   │   ├── api.ts                   # Fetch wrapper ke backend
-│   │   └── constants.ts             # Durasi, provider options, dll
-│   ├── public/
-│   │   └── mockup/                  # Screenshot referensi layout
-│   ├── package.json
-│   ├── tailwind.config.ts
-│   └── next.config.ts
-│
-├── backend/                         # FastAPI app
-│   ├── app/
-│   │   ├── main.py                  # Entry point
-│   │   ├── routers/
-│   │   │   ├── tts.py               # POST /tts/generate
-│   │   │   ├── video.py             # POST /video/analyze, /video/render
-│   │   │   ├── script.py            # POST /script/generate
-│   │   │   └── scraper.py           # POST /scrape
-│   │   └── services/
-│   │       ├── tts_service.py       # Eleven Labs logic
-│   │       ├── video_service.py     # moviepy + OpenCV
-│   │       ├── script_service.py    # AI prompt + API calls
-│   │       └── scraper_service.py   # BeautifulSoup
-│   ├── requirements.txt
-│   └── .env.example
-│
-├── uploads/                         # Temp footage & audio (gitignored)
-├── outputs/                         # Rendered videos (gitignored)
-├── .gitignore
-├── PRD.md                           # Dokumen ini
-├── PROGRESS.md                      # Development progress
-└── README.md                        # User documentation
+├── frontend/          # Next.js 16 App Router
+│   ├── src/app/       # 4 halaman (editor, script-gen, settings, outputs)
+│   ├── src/components/ # 22+ React components
+│   ├── src/contexts/  # AppContext (useReducer + SQLite sync)
+│   └── src/lib/       # API client, constants, utils
+├── backend/           # FastAPI
+│   ├── app/routers/   # 7 route modules
+│   ├── app/services/  # Business logic
+│   ├── app/database.py # SQLite CRUD
+│   └── data/          # mixflow.db + samples/
+├── outputs/           # Generated audio + video
+├── uploads/           # User footage
+├── start-all.sh       # Start semua service
+├── stop-all.sh        # Stop semua service
+├── start.bat / stop.bat
+├── README.md
+├── PRD.md
+└── PROGRESS.md
 ```
 
 ---
 
-## 7. Referensi
+## 7. Keamanan
 
-- **VO-Script-Generator**: [https://github.com/Muhira007/VO-Script-Generator](https://github.com/Muhira007/VO-Script-Generator) — referensi untuk sistem prompt AI, aturan konten, dan struktur output naskah
-- **Eleven Labs API**: [https://elevenlabs.io/docs/api-reference](https://elevenlabs.io/docs/api-reference)
-- **DeepSeek API**: [https://api.deepseek.com/v1/chat/completions](https://api.deepseek.com/v1/chat/completions)
-
----
-
-## 8. 🔒 Keamanan & Proteksi Data Sensitif
-
-### Aturan Mutlak
-Semua credential, API key, dan data sensitif **DILARANG KERAS** masuk ke repo GitHub.
-
-| File | Status Repo | Keterangan |
-|---|---|---|
-| `.env` | ❌ **DILARANG COMMIT** | Berisi API key asli (terdaftar di `.gitignore`) |
-| `.env.example` | ✅ Aman di-commit | Template dengan nilai placeholder |
-| `uploads/` | ❌ **DILARANG COMMIT** | Folder footage user (terdaftar di `.gitignore`) |
-| `outputs/` | ❌ **DILARANG COMMIT** | Hasil render video (terdaftar di `.gitignore`) |
-| `.env.local` | ❌ **DILARANG COMMIT** | Secrets Next.js (terdaftar di `.gitignore`) |
-| Kode sumber (`src/`, `app.py`, dll) | ✅ Aman di-commit | Tidak mengandung hardcoded key |
-
-### Proteksi yang Sudah Dipasang
-- `.gitignore` — memblokir `.env`, `.env.local`, `uploads/`, `outputs/`, `__pycache__/`, `node_modules/`
-- `.env.example` — template dengan placeholder `your_xxx_key_here`
-- Semua API key disimpan di client-side React state (`AppContext`) + di-push ke backend hanya saat diperlukan
-- Input API key di UI menggunakan `<input type="password">` (tidak terlihat di layar)
-
-### Checklist Sebelum Commit
-- [ ] Tidak ada API key hardcoded di source code
-- [ ] `.env` tidak masuk staging area
-- [ ] File user di `uploads/` dan `outputs/` tidak masuk staging area
+- `.env` tidak di-commit (`.gitignore`)
+- API key disimpan di SQLite (tidak exposed ke frontend via SSR)
+- Input password pakai `<input type="password">`
+- File upload tidak executable (hanya `.mp4`, `.mov`, `.mp3`, `.wav`)
+- CORS whitelist: `http://localhost:3000`
 
 ---
 
-## 9. Non-Goals (Sengaja Ditiadakan)
+## 8. Lingkungan Development
 
-Fitur-fitur dari VO-Script-Generator yang TIDAK diimplementasi:
-- ❌ Sistem autentikasi (login/register)
-- ❌ Sistem kredit/langganan
-- ❌ Payment gateway (Midtrans)
-- ❌ Dashboard admin
-- ❌ Riwayat generasi (database)
-- ❌ Mode B-Roll / Roleplay / Hook-Only (bisa ditambah nanti)
+**Mesin:** Dell Latitude — Windows 10 Pro + WSL2 Ubuntu 26.04  
+**CPU:** Intel Core i5-8365U (4C/8T, 1.6 GHz base / 4.1 GHz boost)  
+**RAM:** 16 GB DDR4-2666  
+**GPU:** Intel UHD Graphics 620 (CPU-only encoding)  
+**Storage:** ADATA Legend 710 NVMe SSD 512 GB
 
----
+**Estimasi performa:**
 
-## 10. Lingkungan Development (Localhost)
-
-### 10.1 Spesifikasi Mesin Development
-
-**Laptop:** Dell — Windows 10 Pro + WSL Ubuntu  
-**Validasi CPU-Z:** [https://valid.x86.fr/k3d3n5](https://valid.x86.fr/k3d3n5)
-
-| Komponen | Spesifikasi | Implikasi untuk mixFlow |
-|---|---|---|
-| **CPU** | Intel Core i5-8365U (Whiskey Lake) — 4C/8T, 1.6 GHz base / 4.1 GHz boost, TDP 15W | Render video CPU-only, 1 menit video ≈ 3-7 menit proses |
-| **RAM** | 16 GB DDR4-2666 (Dual Channel) | Cukup untuk video pendek 15-90 detik. Hati-hati dengan background app (Chrome, VS Code) |
-| **GPU** | Intel UHD Graphics 620 (integrated, 128 MB VRAM) | ❌ Tidak ada NVENC/NVDEC. Semua encoding via CPU (libx264 software) |
-| **Storage** | ADATA Legend 710 NVMe SSD 512 GB | ✅ Cepat untuk baca/tulis footage & output |
-| **Suhu** | Bisa mencapai 91°C saat load penuh | ⚠️ Render panjang bisa throttle — perlu jeda antar batch |
-
-### 10.2 Penyesuaian untuk WSL Ubuntu
-
-Karena aplikasi berjalan di **WSL Ubuntu** (bukan native Linux), ada beberapa hal yang harus diperhatikan:
-
-**File System:**
-- ⚠️ **JANGAN** menyimpan project di `/mnt/c/` (filesystem Windows) — I/O lambat, permission error
-- ✅ Simpan project di dalam WSL native: `~/tester/mixflow/` — I/O NVMe penuh
-
-**RAM Allocation:**
-- Buat file `.wslconfig` di Windows (`%USERPROFILE%\.wslconfig`):
-  ```ini
-  [wsl2]
-  memory=8GB          # Alokasi maks 8 GB untuk WSL
-  processors=4        # Gunakan semua 4 core
-  swap=4GB            # Fallback swap untuk proses berat
-  ```
-- Total RAM laptop 16 GB → WSL dikasih 8 GB agar Windows tetap responsif
-
-**Next.js Dev Server:**
-- `next dev` di WSL berjalan normal — tidak ada isu kompatibilitas
-- Hot reload mungkin sedikit lebih lambat dibanding native Linux
-
-**FastAPI Backend:**
-- Uvicorn async server berjalan baik di WSL
-- Video rendering (moviepy + OpenCV) jalan di WSL tanpa masalah
-
-**Port Forwarding:**
-- WSL otomatis forward port ke Windows host
-- Akses frontend di `http://localhost:3000` dari browser Windows
-
-### 10.3 Estimasi Performa di Laptop Ini
-
-| Proses | Estimasi Waktu | Keterangan |
-|---|---|---|
-| **Generate TTS** (30s naskah) | ~5-10 detik | Tergantung latency Eleven Labs API |
-| **Analyze Footage** (4 file × 15s) | ~10-20 detik | OpenCV frame-by-frame, CPU-bound |
-| **Adaptive Trim** | < 1 detik | Hanya kalkulasi durasi |
-| **Render Final** (60s output, 1080p H.264) | 3-7 menit | ⚠️ Proses terberat. libx264 software encoding 100% CPU |
-| **Render Final** (60s output, 720p H.264) | 1.5-3 menit | ✅ Lebih cepat, kualitas cukup untuk TikTok/Shopee |
-| **Generate Script** (AI) | ~3-8 detik | Tergantung provider & latency API |
-
-**Rekomendasi untuk development & testing:**
-- Gunakan video 15-30 detik dulu saat testing — render lebih cepat
-- Tutup aplikasi berat (Chrome banyak tab, VS Code dengan banyak extension) saat render
-- Render di background, user bisa lanjut generate script sambil nunggu
-- Jangan render paralel (batch) — CPU 4-core tidak kuat concurrent encoding
-
-### 10.4 Dampak pada Desain Aplikasi
-
-Berdasarkan spesifikasi di atas, beberapa penyesuaian UI/UX:
-
-1. **Progress bar wajib ada** — user harus tahu render sedang berjalan, bukan hang
-2. **Estimasi waktu render** — tampilkan "Estimasi: ~5 menit" berdasarkan durasi × CPU benchmark
-3. **Background processing** — jangan block UI saat render. User bisa switch ke tab Script Generator sambil nunggu
-4. **Tombol "Cancel Render"** — kalau user salah upload atau mau ganti footage
-5. **Notifikasi selesai** — toast + suara (opsional) saat render selesai
-6. **Low-res preview dulu** — sebelum render final full HD, kasih preview 480p lebih cepat (~30 detik)
-
-### 10.5 Rencana Scaling ke Depan
-
-Fase awal: **localhost only** (laptop pribadi).  
-Jika nanti dipakai banyak user, bisa upgrade ke:
-
-| Opsi | Kapan | Estimasi Biaya |
-|---|---|---|
-| **Dedicated GPU** (laptop external GPU enclosure) | Butuh render < 1 menit | Rp 3-8 juta |
-| **Cloud VPS** (Hetzner/AWS dengan GPU) | Multi-user / production | $50-200/bulan |
-| **Server dedicated render** (PC terpisah di rumah) | Batch processing semalaman | Rp 10-15 juta (bekas) |
+| Proses | Waktu |
+|---|---|
+| Generate TTS (30s) | ~5-10 detik |
+| Analyze footage (4×15s) | ~10-20 detik |
+| Render final (60s, 1080p) | 3-7 menit |
+| Render final (60s, 720p) | 1.5-3 menit |
 
 ---
 
-_Dokumen ini dibuat pada 27 Juni 2026. Terakhir diupdate dengan spesifikasi hardware development._
+_Dokumen ini dibuat pada 27 Juni 2026. Terakhir diupdate dengan status development terkini._

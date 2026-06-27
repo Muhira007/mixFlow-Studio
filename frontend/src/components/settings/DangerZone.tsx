@@ -7,10 +7,11 @@ import { Button } from '@/components/shared/Button';
 type Props = {
   onClearFootage: () => void;
   onClearOutputs: () => void;
+  onClearAudio: () => void;
   onResetAll: () => void;
 };
 
-export function DangerZone({ onClearFootage, onClearOutputs, onResetAll }: Props) {
+export function DangerZone({ onClearFootage, onClearOutputs, onClearAudio, onResetAll }: Props) {
   const [confirming, setConfirming] = useState<string | null>(null);
 
   function handle(action: string, fn: () => void) {
@@ -25,7 +26,7 @@ export function DangerZone({ onClearFootage, onClearOutputs, onResetAll }: Props
 
   return (
     <Card
-      header="⚠️ Danger Zone"
+      header="Danger Zone"
       icon="⚠️"
       className="border-[var(--danger)]"
     >
@@ -48,6 +49,14 @@ export function DangerZone({ onClearFootage, onClearOutputs, onResetAll }: Props
           onClick={() => handle('outputs', onClearOutputs)}
         >
           {confirming === 'outputs' ? 'Klik lagi untuk konfirmasi' : '🗑️ Hapus output'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-[var(--warning)]! text-[var(--warning)]!"
+          onClick={() => handle('audio', onClearAudio)}
+        >
+          {confirming === 'audio' ? 'Klik lagi untuk konfirmasi' : '🎵 Hapus semua audio TTS'}
         </Button>
         <Button
           variant="danger"

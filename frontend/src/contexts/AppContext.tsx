@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { STORAGE_KEY } from '@/lib/constants';
+import { fetchAllState, type SyncState } from '@/lib/api';
 
 // ============================================
 // Types
@@ -42,14 +43,24 @@ type OutputVideo = {
   createdAt: string;
 };
 
+type TtsVoice = {
+  name: string;
+  voiceId: string;
+  language: string;
+  gender: string;
+  label: string;
+  hasSample: boolean;
+};
+
 type GeneratedScript = {
-  versionA: string;
-  versionB: string;
+  id: string;
+  script: string;
   caption: string;
   productName: string;
   style: string;
   duration: string;
   audience: string;
+  createdAt: string;
 };
 
 export type AppState = {
@@ -70,12 +81,15 @@ export type AppState = {
   scriptSource: 'text' | 'audio';
   scriptText: string;
   uploadedAudio: File | null;
+  ttsVoices: TtsVoice[];
+  audioSamples: Record<string, string>; // voiceId → objectURL
+  ttsAudio: { url: string; duration: number } | null;
   selectedVoice: string;
   outputResolution: '1080×1920' | '720×1280';
   pipelineStep: PipelineStep;
   analysisResults: AnalysisResult[];
   outputHistory: OutputVideo[];
-  lastScript: GeneratedScript | null;
+  scriptHistory: GeneratedScript[];
   toasts: Toast[];
   currentPanel: string;
 };
@@ -91,13 +105,22 @@ type Action =
   | { type: 'SET_SCRIPT_TEXT'; text: string }
   | { type: 'SET_UPLOADED_AUDIO'; file: File | null }
   | { type: 'SET_VOICE'; voice: string }
+  | { type: 'SET_TTS_AUDIO'; audio: { url: string; duration: number } | null }
+  | { type: 'ADD_TTS_VOICE'; voice: TtsVoice }
+  | { type: 'REMOVE_TTS_VOICE'; index: number }
+  | { type: 'UPDATE_TTS_VOICE'; index: number; voice: TtsVoice }
+  | { type: 'SET_AUDIO_SAMPLE'; voiceId: string; url: string }
+  | { type: 'REMOVE_AUDIO_SAMPLE'; voiceId: string }
+  | { type: 'LOAD_VOICES'; voices: TtsVoice[] }
   | { type: 'SET_OUTPUT_RESOLUTION'; resolution: '1080×1920' | '720×1280' }
   | { type: 'SET_PIPELINE_STEP'; step: PipelineStep }
   | { type: 'SET_ANALYSIS'; results: AnalysisResult[] }
   | { type: 'ADD_OUTPUT'; video: OutputVideo }
   | { type: 'REMOVE_OUTPUT'; index: number }
   | { type: 'CLEAR_OUTPUTS' }
-  | { type: 'SET_LAST_SCRIPT'; script: GeneratedScript | null }
+  | { type: 'ADD_SCRIPT_TO_HISTORY'; script: GeneratedScript }
+  | { type: 'REMOVE_SCRIPT_FROM_HISTORY'; id: string }
+  | { type: 'CLEAR_SCRIPT_HISTORY' }
   | { type: 'ADD_TOAST'; toast: Omit<Toast, 'id'> }
   | { type: 'REMOVE_TOAST'; id: string }
   | { type: 'SET_PANEL'; panel: string }
@@ -126,12 +149,15 @@ const initialState: AppState = {
   scriptSource: 'text',
   scriptText: '',
   uploadedAudio: null,
-  selectedVoice: '🇮🇩 Rina — Indonesia Female',
+  ttsVoices: [],
+  audioSamples: {},
+  ttsAudio: null,
+  selectedVoice: '21m00Tcm4TlvDq8ikWAM',
   outputResolution: '1080×1920',
   pipelineStep: 'idle',
   analysisResults: [],
   outputHistory: [],
-  lastScript: null,
+  scriptHistory: [],
   toasts: [],
   currentPanel: 'editor',
 };
@@ -196,6 +222,37 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_VOICE':
       return { ...state, selectedVoice: action.voice };
 
+    case 'SET_TTS_AUDIO':
+      return { ...state, ttsAudio: action.audio, pipelineStep: action.audio ? 'tts' : state.pipelineStep };
+
+    case 'ADD_TTS_VOICE':
+      return { ...state, ttsVoices: [...state.ttsVoices, action.voice] };
+
+    case 'REMOVE_TTS_VOICE':
+      return { ...state, ttsVoices: state.ttsVoices.filter((_, i) => i !== action.index) };
+
+    case 'UPDATE_TTS_VOICE': {
+      const updated = [...state.ttsVoices];
+      updated[action.index] = action.voice;
+      return { ...state, ttsVoices: updated };
+    }
+
+    case 'LOAD_VOICES':
+      return { ...state, ttsVoices: action.voices };
+
+    case 'SET_AUDIO_SAMPLE':
+      return { ...state, audioSamples: { ...state.audioSamples, [action.voiceId]: action.url } };
+
+    case 'REMOVE_AUDIO_SAMPLE': {
+      // Revoke object URL to prevent memory leak
+      const old = state.audioSamples[action.voiceId];
+      if (old && old.startsWith('blob:')) {
+        try { URL.revokeObjectURL(old); } catch {}
+      }
+      const { [action.voiceId]: _, ...rest } = state.audioSamples;
+      return { ...state, audioSamples: rest };
+    }
+
     case 'SET_OUTPUT_RESOLUTION':
       return { ...state, outputResolution: action.resolution };
 
@@ -217,8 +274,14 @@ function reducer(state: AppState, action: Action): AppState {
     case 'CLEAR_OUTPUTS':
       return { ...state, outputHistory: [] };
 
-    case 'SET_LAST_SCRIPT':
-      return { ...state, lastScript: action.script };
+    case 'ADD_SCRIPT_TO_HISTORY':
+      return { ...state, scriptHistory: [action.script, ...state.scriptHistory].slice(0, 20) };
+
+    case 'REMOVE_SCRIPT_FROM_HISTORY':
+      return { ...state, scriptHistory: state.scriptHistory.filter(s => s.id !== action.id) };
+
+    case 'CLEAR_SCRIPT_HISTORY':
+      return { ...state, scriptHistory: [] };
 
     case 'ADD_TOAST': {
       const toast: Toast = { ...action.toast, id: Date.now().toString(36) + Math.random().toString(36).slice(2) };
@@ -236,6 +299,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...initialState,
         apiKeys: { ...initialState.apiKeys },
         settings: { ...initialState.settings },
+        ttsVoices: state.ttsVoices, // preserve custom voices
       };
 
     case 'LOAD_STATE':
@@ -260,57 +324,94 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const initialized = useRef(false);
 
-  // Load saved state from localStorage
+  // Load state from SQLite backend — SINGLE SOURCE OF TRUTH
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
+    async function load() {
+      try {
+        const remote: SyncState = await fetchAllState();
+
+        const loaded: Partial<AppState> = {};
+
+        if (remote.apiKeys) {
+          loaded.apiKeys = {
+            elevenlabs: remote.apiKeys.elevenlabs || '',
+            deepseek: remote.apiKeys.deepseek || '',
+            gemini: remote.apiKeys.gemini || '',
+            openai: remote.apiKeys.openai || '',
+          };
+        }
+
+        if (remote.settings) {
+          loaded.settings = {
+            voiceId: remote.settings.voiceId || initialState.settings.voiceId,
+            minKeepDuration: parseFloat(remote.settings.minKeepDuration || String(initialState.settings.minKeepDuration)),
+            outputFormat: remote.settings.outputFormat || initialState.settings.outputFormat,
+            videoCodec: remote.settings.videoCodec || initialState.settings.videoCodec,
+          };
+        }
+
         dispatch({
-          type: 'LOAD_STATE',
-          state: {
-            apiKeys: saved.apiKeys || initialState.apiKeys,
-            settings: saved.settings || initialState.settings,
-            uploadedFileMeta: saved.uploadedFileMeta || [],
-            scriptSource: saved.scriptSource || 'text',
-            scriptText: saved.scriptText || '',
-            selectedVoice: saved.selectedVoice || initialState.selectedVoice,
-            outputResolution: saved.outputResolution || '1080×1920',
-            pipelineStep: saved.pipelineStep || 'idle',
-            outputHistory: saved.outputHistory || [],
-            lastScript: saved.lastScript || null,
-          },
+          type: 'LOAD_VOICES',
+          voices: (remote.ttsVoices || []).map((v: any) => ({
+            name: v.name || '',
+            voiceId: v.voice_id || '',
+            language: v.language || 'Indonesia',
+            gender: v.gender || 'Neutral',
+            label: v.label || 'Narasi',
+            hasSample: v.has_sample || false,
+          })),
         });
+
+        loaded.scriptHistory = (remote.scriptHistory || []).map((s: any) => ({
+          id: s.id, script: s.script, caption: s.caption,
+          productName: s.product_name, style: s.style,
+          duration: s.duration, audience: s.audience, createdAt: s.created_at,
+        }));
+
+        loaded.outputHistory = (remote.outputHistory || []).map((o: any) => ({
+          name: o.name, duration: o.duration, size: o.size, createdAt: o.created_at,
+        }));
+
+        // Transient UI-only state from localStorage
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const local = JSON.parse(raw);
+            loaded.scriptText = local.scriptText || '';
+            loaded.selectedVoice = local.selectedVoice || initialState.selectedVoice;
+            loaded.scriptSource = local.scriptSource || 'text';
+            loaded.outputResolution = local.outputResolution || '1080×1920';
+            loaded.pipelineStep = 'idle'; // selalu reset — gak boleh nyangkut
+            loaded.ttsAudio = null;       // selalu reset
+            loaded.uploadedFileMeta = local.uploadedFileMeta || [];
+          }
+        } catch {}
+
+        dispatch({ type: 'LOAD_STATE', state: loaded });
+      } catch (e) {
+        console.error('Gagal load dari backend SQLite:', e);
       }
-    } catch (e) {
-      console.warn('Failed to load state:', e);
+
+      initialized.current = true;
     }
+    load();
   }, []);
 
-  // Persist state to localStorage (debounced)
+  // Cache UI-only transient state to localStorage (data lives in SQLite)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const toSave = {
-          apiKeys: state.apiKeys,
-          settings: state.settings,
-          uploadedFileMeta: state.uploadedFileMeta,
-          scriptSource: state.scriptSource,
-          scriptText: state.scriptText,
-          selectedVoice: state.selectedVoice,
-          outputResolution: state.outputResolution,
-          pipelineStep: state.pipelineStep,
-          outputHistory: state.outputHistory,
-          lastScript: state.lastScript,
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-      } catch (e) {
-        console.warn('Failed to save state:', e);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [state]);
+    if (!initialized.current) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        scriptText: state.scriptText,
+        selectedVoice: state.selectedVoice,
+        scriptSource: state.scriptSource,
+        outputResolution: state.outputResolution,
+        uploadedFileMeta: state.uploadedFileMeta,
+      }));
+    } catch {}
+  }, [state.scriptText, state.selectedVoice, state.scriptSource, state.outputResolution, state.uploadedFileMeta]);
 
   const addToast = useCallback((message: string, type: ToastType = 'success') => {
     dispatch({ type: 'ADD_TOAST', toast: { message, type } });

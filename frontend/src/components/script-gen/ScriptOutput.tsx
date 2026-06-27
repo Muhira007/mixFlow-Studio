@@ -2,26 +2,23 @@
 
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
-import { Badge } from '@/components/shared/Badge';
 
 type Script = {
-  versionA: string;
-  versionB: string;
+  script: string;
   caption: string;
 };
 
 type Props = {
   script: Script | null;
-  onCopyVersionA: () => void;
-  onCopyVersionB: () => void;
+  onCopyScript: () => void;
   onCopyCaption: () => void;
   onUseInEditor: () => void;
 };
 
-export function ScriptOutput({ script, onCopyVersionA, onCopyVersionB, onCopyCaption, onUseInEditor }: Props) {
+export function ScriptOutput({ script, onCopyScript, onCopyCaption, onUseInEditor }: Props) {
   if (!script) {
     return (
-      <Card header="📦 Output Naskah" icon="📦">
+      <Card header="Output Naskah" icon="📦">
         <div className="text-center py-8 text-[var(--text-muted)]">
           🤖 Generate naskah dulu untuk melihat output
         </div>
@@ -30,44 +27,32 @@ export function ScriptOutput({ script, onCopyVersionA, onCopyVersionB, onCopyCap
   }
 
   return (
-    <Card header="📦 Output Naskah" icon="📦">
-      <div className="bg-[var(--bg-input)] border border-[var(--border)] rounded-xl p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-[350px] overflow-y-auto relative">
-        <button
-          className="absolute top-2.5 right-2.5"
-          onClick={() => {
-            navigator.clipboard.writeText(
-              `VERSION A:\n${script.versionA}\n\nVERSION B:\n${script.versionB}\n\nCAPTION:\n${script.caption}`
-            );
-          }}
-          title="Copy all"
-        >
-          <Button variant="outline" size="sm">📋 Copy All</Button>
-        </button>
-
-        <div className="inline-block px-2.5 py-1 rounded text-[0.68rem] font-bold mb-2 tracking-[0.05em] bg-[#f97316] text-black">
-          VERSION A — Hard Selling
+    <Card header="Output Naskah" icon="📦">
+      {/* Naskah */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold text-[var(--text-secondary)]">🎙️ Naskah Voice-Over</span>
+          <Button variant="outline" size="sm" onClick={onCopyScript}>📋 Copy</Button>
         </div>
-        <div className="mb-4">{script.versionA}</div>
-
-        <div className="inline-block px-2.5 py-1 rounded text-[0.68rem] font-bold mb-2 tracking-[0.05em] bg-[#a855f7] text-white">
-          VERSION B — Storytelling
+        <div className="bg-[var(--bg-input)] border border-[var(--border)] rounded-xl p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-[250px] overflow-y-auto">
+          {script.script}
         </div>
-        <div className="mb-4">{script.versionB}</div>
-
-        <div className="inline-block px-2.5 py-1 rounded text-[0.68rem] font-bold mb-2 tracking-[0.05em] bg-[#10b981] text-black">
-          CAPTION + HASHTAGS
-        </div>
-        <div>{script.caption}</div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        <Button variant="outline" size="sm" onClick={onCopyVersionA}>📋 Copy Ver. A</Button>
-        <Button variant="outline" size="sm" onClick={onCopyVersionB}>📋 Copy Ver. B</Button>
-        <Button variant="outline" size="sm" onClick={onCopyCaption}>📋 Copy Caption</Button>
-        <Button variant="primary" size="sm" className="ml-auto" onClick={onUseInEditor}>
-          ➡️ Pakai di Editor
-        </Button>
+      {/* Caption */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold text-[var(--text-secondary)]">📝 Caption + Hashtags</span>
+          <Button variant="outline" size="sm" onClick={onCopyCaption}>📋 Copy</Button>
+        </div>
+        <div className="bg-[var(--bg-input)] border border-[var(--border)] rounded-xl p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-[120px] overflow-y-auto text-[var(--text-secondary)]">
+          {script.caption}
+        </div>
       </div>
+
+      <Button variant="primary" size="lg" block onClick={onUseInEditor}>
+        ➡️ Pakai Naskah di Video Editor
+      </Button>
     </Card>
   );
 }

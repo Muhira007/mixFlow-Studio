@@ -8,7 +8,7 @@ export function AnalysisTable() {
   const { state } = useApp();
 
   return (
-    <Card header="📊 Hasil Analisis Footage" icon="📊">
+    <Card header="Hasil Analisis Footage" icon="📊">
       <div className="overflow-x-auto -mx-[18px] px-[18px] max-md:-mx-3.5 max-md:px-3.5">
         <table className="w-full border-collapse text-xs min-w-[600px]">
           <thead>
