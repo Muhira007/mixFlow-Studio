@@ -6,6 +6,7 @@ import { useApp } from '@/contexts/AppContext';
 import { ACCEPTED_VIDEO_TYPES, ACCEPTED_VIDEO_EXTENSIONS, MAX_FILE_SIZE } from '@/lib/constants';
 import { Card } from '@/components/shared/Card';
 import { formatFileSize } from '@/lib/utils';
+import { BACKEND_URL } from '@/lib/constants';
 
 type SortMode = 'upload' | 'name' | 'size' | 'date';
 
@@ -22,9 +23,11 @@ export function UploadZone() {
   const [dragOver, setDragOver] = useState(false);
   const [sortBy, setSortBy] = useState<SortMode>('upload');
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, { loaded: number; total: number; speed: number; done: boolean }>>({});
 
   const handleFiles = useCallback(
-    (files: FileList | File[]) => {
+    async (files: FileList | File[]) => {
       const valid: File[] = [];
       for (const file of files) {
         if (!ACCEPTED_VIDEO_TYPES.includes(file.type) && !file.name.match(/\.(mp4|mov|avi|webm)$/i)) {
@@ -51,6 +54,75 @@ export function UploadZone() {
         setThumbnails(prev => ({ ...prev, ...newThumbs }));
         dispatch({ type: 'ADD_FILES', files: valid });
         addToast(`📤 ${valid.length} footage ditambahkan`);
+
+        // Upload ke backend — parallel dengan progress per file
+        setUploading(true);
+        const init: Record<string, { loaded: number; total: number; speed: number; done: boolean }> = {};
+        valid.forEach(f => { init[f.name] = { loaded: 0, total: f.size, speed: 0, done: false }; });
+        setUploadProgress(init);
+
+        const uploadWithProgress = (file: File): Promise<any> => {
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            let startTime = Date.now();
+            let lastLoaded = 0;
+
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const now = Date.now();
+                const elapsed = (now - startTime) / 1000;
+                const speed = elapsed > 0 ? (e.loaded - lastLoaded) / elapsed : 0;
+                startTime = now;
+                lastLoaded = e.loaded;
+                setUploadProgress(prev => ({
+                  ...prev,
+                  [file.name]: { loaded: e.loaded, total: e.total, speed, done: false }
+                }));
+              }
+            };
+
+            xhr.onload = () => {
+              setUploadProgress(prev => ({
+                ...prev,
+                [file.name]: { ...prev[file.name], done: true }
+              }));
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+              } else {
+                reject(new Error(`HTTP ${xhr.status}`));
+              }
+            };
+
+            xhr.onerror = () => {
+              setUploadProgress(prev => ({
+                ...prev,
+                [file.name]: { ...prev[file.name], done: true }
+              }));
+              reject(new Error('Network error'));
+            };
+
+            xhr.open('POST', `${BACKEND_URL}/api/video/upload`);
+            xhr.send(formData);
+          });
+        };
+
+        const results = await Promise.allSettled(valid.map(uploadWithProgress));
+        const ids: string[] = [];
+        results.forEach((r, i) => {
+          if (r.status === 'fulfilled') {
+            ids.push(r.value.file_id);
+          } else {
+            addToast(`⚠️ Gagal upload ${valid[i].name}`, 'warning');
+          }
+        });
+        if (ids.length > 0) {
+          dispatch({ type: 'ADD_FILE_IDS', ids });
+        }
+        setUploading(false);
+        setTimeout(() => setUploadProgress({}), 3000);
+        addToast(`✅ ${ids.length}/${valid.length} footage terupload ke backend`);
       }
     },
     [state.uploadedFiles, dispatch, addToast]
@@ -104,22 +176,68 @@ export function UploadZone() {
         </div>
       )}
 
-      {/* Drop zone */}
+      {/* Drop zone — full width, large area */}
       <div
-        className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 bg-[var(--bg-input)] active:scale-[0.98] ${
-          dragOver ? 'border-[var(--accent)] bg-[var(--bg-card)]' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--bg-card)]'
+        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 bg-[var(--bg-input)] active:scale-[0.98] min-h-[160px] flex flex-col items-center justify-center ${
+          dragOver ? 'border-[var(--accent)] bg-[var(--bg-card)] scale-[1.01]' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--bg-card)]'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        <Upload size={30} className="mx-auto mb-1 text-[var(--text-muted)]" />
-        <p className="font-semibold text-xs mb-0.5">Klik atau drag & drop</p>
-        <p className="text-[var(--text-muted)] text-[0.65rem]">
+        <Upload size={48} className="mx-auto mb-3 text-[var(--text-muted)]" />
+        <p className="font-semibold text-sm mb-1">Klik atau drag & drop footage di sini</p>
+        <p className="text-[var(--text-muted)] text-xs">
           {ACCEPTED_VIDEO_EXTENSIONS} — Maks 500MB/file
         </p>
+        {state.uploadedFiles.length > 0 && (
+          <p className="text-[var(--accent)] text-xs mt-2 font-medium">
+            📤 {state.uploadedFiles.length} file terpilih — drop lagi untuk menambah
+          </p>
+        )}
       </div>
+
+      {/* Upload progress — per-file bars */}
+      {uploading && Object.keys(uploadProgress).length > 0 && (
+        <div className="mt-2.5 space-y-1.5 max-h-[220px] overflow-y-auto">
+          {Object.entries(uploadProgress).map(([name, p]) => {
+            const pct = p.total > 0 ? Math.round((p.loaded / p.total) * 100) : 0;
+            const loadedMB = (p.loaded / 1024 / 1024).toFixed(1);
+            const totalMB = (p.total / 1024 / 1024).toFixed(1);
+            const speedStr = p.speed > 1024 * 1024 ? `${(p.speed / 1024 / 1024).toFixed(1)} MB/s`
+              : p.speed > 1024 ? `${(p.speed / 1024).toFixed(0)} KB/s`
+              : `${Math.round(p.speed)} B/s`;
+
+            return (
+              <div key={name} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs ${
+                p.done ? 'bg-[var(--success)]/5' : 'bg-[var(--bg-input)]'
+              }`}>
+                <span className="w-4 text-center shrink-0">
+                  {p.done ? '✅' : '⏳'}
+                </span>
+                <span className="flex-1 truncate font-medium text-[var(--text-primary)]">{name}</span>
+                <span className="text-[var(--text-muted)] shrink-0 w-16 text-right">{loadedMB}/{totalMB} MB</span>
+                <span className="text-[var(--text-muted)] shrink-0 w-14 text-right">
+                  {p.done ? 'Selesai' : pct > 0 ? `${pct}%` : '...'}
+                </span>
+                {!p.done && pct > 0 && (
+                  <span className="text-[var(--text-muted)] shrink-0 w-16 text-right">{speedStr}</span>
+                )}
+                {/* Mini progress bar */}
+                <div className="w-20 h-1.5 bg-[var(--border)] rounded-full overflow-hidden shrink-0">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      p.done ? 'bg-[var(--success)]' : 'bg-[var(--accent)]'
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <input
         ref={inputRef}

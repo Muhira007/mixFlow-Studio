@@ -24,16 +24,24 @@ export function AnalysisTable() {
             </tr>
           </thead>
           <tbody>
-            {state.analysisResults.length > 0 ? (
-              state.analysisResults.map((r) => (
-                <tr key={r.id}>
-                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.id}</td>
-                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.file}</td>
+            {state.pipelineStep === 'analyze' && state.analysisResults.length === 0 ? (
+              <tr key="loading">
+                <td colSpan={8} className="text-center py-8">
+                  <span className="text-[var(--accent)] text-xs animate-pulse">
+                    🔍 Menganalisis footage... Mohon tunggu
+                  </span>
+                </td>
+              </tr>
+            ) : state.analysisResults.length > 0 ? (
+              state.analysisResults.map((r, i) => (
+                <tr key={r.file_id || i}>
+                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{i + 1}</td>
+                  <td className="py-2.5 px-2.5 border-b border-[var(--border)] max-w-[140px] truncate">{r.file}</td>
                   <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.duration}</td>
                   <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.resolution}</td>
-                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.blur}</td>
-                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.shake}</td>
-                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.goodSegment}</td>
+                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{typeof r.blur === 'number' ? r.blur.toFixed(1) : r.blur}</td>
+                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{typeof r.shake === 'number' ? r.shake.toFixed(1) : r.shake}</td>
+                  <td className="py-2.5 px-2.5 border-b border-[var(--border)]">{r.good_start_sec?.toFixed(1)}s - {r.good_end_sec?.toFixed(1)}s</td>
                   <td className="py-2.5 px-2.5 border-b border-[var(--border)]">
                     <Badge
                       label={r.quality === 'good' ? 'Good' : r.quality === 'ok' ? 'OK' : 'Trim'}
@@ -43,7 +51,7 @@ export function AnalysisTable() {
                 </tr>
               ))
             ) : (
-              <tr>
+              <tr key="empty">
                 <td colSpan={8} className="text-center py-8 text-[var(--text-muted)]">
                   Upload footage dan klik Analyze untuk melihat hasil analisis
                 </td>

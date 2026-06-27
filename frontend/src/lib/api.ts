@@ -94,32 +94,63 @@ export async function generateTTS(text: string, voiceId: string, apiKey: string)
 
 // ---- Video Endpoints ----
 
-export async function analyzeFootage(formData: FormData) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/video/analyze`, {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new ApiError(errBody.detail || 'Analysis failed', res.status);
-    }
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
+export async function uploadFootage(file: File): Promise<{ file_id: string; original_name: string; working_path: string; was_proxied: boolean; original_resolution: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = `${BACKEND_URL}/api/video/upload`;
+  const res = await fetch(url, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new ApiError(errBody.detail || 'Upload gagal', res.status);
   }
+  return res.json();
 }
 
-export async function renderVideo(trimSegments: unknown[], audioUrl: string) {
+export async function trimFootage(analyses: any[], targetDuration: number, minKeep = 3.0) {
+  return request('/api/video/trim', {
+    method: 'POST',
+    body: JSON.stringify({ analyses, target_duration: targetDuration, min_keep: minKeep }),
+    timeout: 30000,
+  });
+}
+
+export async function concatFootage(segments: any[], fileIds: string[], outputWidth = 1080, outputHeight = 1920) {
+  return request('/api/video/concat', {
+    method: 'POST',
+    body: JSON.stringify({ segments, file_ids: fileIds, output_width: outputWidth, output_height: outputHeight }),
+    timeout: 120000,
+  });
+}
+
+export async function renderVideo(videoPath: string, audioPath: string, outputWidth = 1080, outputHeight = 1920) {
   return request('/api/video/render', {
     method: 'POST',
-    body: JSON.stringify({ trim_segments: trimSegments, audio_url: audioUrl }),
-    timeout: 300000, // 5 min for render
+    body: JSON.stringify({ video_path: videoPath, audio_path: audioPath, output_width: outputWidth, output_height: outputHeight }),
+    timeout: 600000,
   });
+}
+
+export async function loadPipelineState(): Promise<any> {
+  return request('/api/video/pipeline/state');
+}
+
+export async function savePipelineState(state: Record<string, any>): Promise<void> {
+  return request('/api/video/pipeline/state', {
+    method: 'POST',
+    body: JSON.stringify(state),
+  });
+}
+
+export async function analyzeFootage(fileIds: string[]) {
+  const formData = new FormData();
+  fileIds.forEach(id => formData.append('file_ids', id));
+  const url = `${BACKEND_URL}/api/video/analyze`;
+  const res = await fetch(url, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new ApiError(errBody.detail || 'Analysis failed', res.status);
+  }
+  return res.json();
 }
 
 // ---- Script Generator Endpoints ----

@@ -123,7 +123,7 @@ export function ScriptTextarea() {
                   try {
                     const result = await generateTTS(state.scriptText, state.selectedVoice, apiKey);
                     const audioUrl = `${BACKEND_URL}${result.audio_url}`;
-                    dispatch({ type: 'SET_TTS_AUDIO', audio: { url: audioUrl, duration: result.duration } });
+                    dispatch({ type: 'SET_TTS_AUDIO', audio: { url: audioUrl, filename: result.filename, duration: result.duration } });
                     addToast(`🔊 TTS berhasil — ${result.duration} detik, ${result.chunks} chunk`, 'success');
                   } catch (err: any) {
                     const msg = err.message || 'Unknown error';
@@ -193,6 +193,9 @@ export function ScriptTextarea() {
               selectedUrl={selectedAudioUrl}
               onSelect={(url, filename) => {
                 setSelectedAudioUrl(url);
+                const fullUrl = `${BACKEND_URL}/api/tts/audio/${filename}`;
+                dispatch({ type: 'SET_LIBRARY_AUDIO', audio: { url: fullUrl, filename } });
+                dispatch({ type: 'SET_PIPELINE_STEP', step: 'tts' });
                 addToast(`📁 Dipilih: ${filename}`);
               }}
             />

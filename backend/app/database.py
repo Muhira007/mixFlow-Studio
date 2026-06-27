@@ -70,6 +70,22 @@ def init_db():
             size TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL
         );
+
+        -- File Registry (uploaded footage tracking)
+        CREATE TABLE IF NOT EXISTS file_registry (
+            file_id TEXT PRIMARY KEY,
+            original_name TEXT NOT NULL DEFAULT '',
+            original_path TEXT NOT NULL DEFAULT '',
+            working_path TEXT NOT NULL DEFAULT '',
+            was_proxied INTEGER DEFAULT 0,
+            original_resolution TEXT DEFAULT ''
+        );
+
+        -- Pipeline State (save/resume workflow)
+        CREATE TABLE IF NOT EXISTS pipeline_state (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
     """)
     conn.commit()
     conn.close()
@@ -233,6 +249,68 @@ def delete_output(output_id: int) -> bool:
 
 
 # ============================================
+# FILE REGISTRY — uploaded footage tracking
+# ============================================
+
+def add_file_record(fid: str, name: str, orig: str, work: str, proxied: bool, res: str):
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO file_registry (file_id, original_name, original_path, working_path, was_proxied, original_resolution) VALUES (?,?,?,?,?,?)",
+        (fid, name, orig, work, 1 if proxied else 0, res),
+    )
+    conn.commit()
+    conn.close()
+
+
+def list_file_records() -> list[dict]:
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM file_registry ORDER BY file_id").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def clear_file_records():
+    conn = get_db()
+    conn.execute("DELETE FROM file_registry")
+    conn.commit()
+    conn.close()
+
+
+# ============================================
+# PIPELINE STATE — save/resume workflow
+# ============================================
+
+def get_pipeline_state() -> dict:
+    conn = get_db()
+    rows = conn.execute("SELECT key, value FROM pipeline_state").fetchall()
+    conn.close()
+    state = {}
+    for r in rows:
+        try:
+            state[r["key"]] = json.loads(r["value"])
+        except (json.JSONDecodeError, TypeError):
+            state[r["key"]] = r["value"]
+    return state
+
+
+def set_pipeline_state(key: str, value):
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO pipeline_state (key, value) VALUES (?, ?)",
+        (key, json.dumps(value) if not isinstance(value, str) else value),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_pipeline_state():
+    conn = get_db()
+    conn.execute("DELETE FROM pipeline_state")
+    conn.commit()
+    conn.close()
+
+
+# ============================================
 # FULL SYNC — dump entire state
 # ============================================
 
@@ -254,4 +332,6 @@ def dump_all() -> dict:
         "ttsVoices": voices,
         "scriptHistory": list_scripts(),
         "outputHistory": list_outputs(),
+        "fileRegistry": list_file_records(),
+        "pipelineState": get_pipeline_state(),
     }

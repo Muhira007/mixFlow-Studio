@@ -18,11 +18,12 @@ from typing import Optional
 from app.config import UPLOADS_DIR, OUTPUTS_DIR
 from app.services.video_service import (
     preprocess_footage,
-    analyze_footage,
+    analyze_footage as do_analyze,
     adaptive_trim,
     concat_clips,
 )
 from app.services.renderer import render_final
+from app.database import add_file_record, list_file_records, clear_file_records
 
 router = APIRouter()
 
@@ -135,6 +136,16 @@ async def upload_footage(file: UploadFile = File(...)):
             "original_resolution": f"{w}×{h}" if w and h else "unknown",
         }
 
+        # Save to SQLite for resume
+        add_file_record(
+            fid=file_id,
+            name=file.filename,
+            orig=str(orig_path),
+            work=str(working_path),
+            proxied=was_proxied,
+            res=f"{w}×{h}" if w and h else "unknown",
+        )
+
         return UploadResponse(
             file_id=file_id,
             original_name=file.filename,
@@ -165,7 +176,7 @@ async def analyze_footage(file_ids: list[str] = Form(...)):
             raise HTTPException(status_code=404, detail=f"File proxy hilang: {working_path}")
 
         try:
-            analysis = analyze_footage(working_path)
+            analysis = do_analyze(working_path)
             analysis["file_id"] = fid
             results.append(analysis)
         except Exception as e:
@@ -233,10 +244,16 @@ async def render_video(req: RenderRequest):
     video_path = Path(req.video_path)
     audio_path = Path(req.audio_path)
 
+    # If audio is just a filename, resolve from OUTPUTS_DIR
+    if not audio_path.is_absolute() or not audio_path.exists():
+        resolved = OUTPUTS_DIR / audio_path.name
+        if resolved.exists():
+            audio_path = resolved
+
     if not video_path.exists():
         raise HTTPException(status_code=404, detail="Video tidak ditemukan")
     if not audio_path.exists():
-        raise HTTPException(status_code=404, detail="Audio tidak ditemukan")
+        raise HTTPException(status_code=404, detail=f"Audio tidak ditemukan: {audio_path}")
 
     try:
         output = render_final(
@@ -267,3 +284,32 @@ async def download_video(filename: str):
         media_type="video/mp4",
         filename=filename,
     )
+
+
+# ---- Pipeline State (save/resume) ----
+
+from app.database import set_pipeline_state, get_pipeline_state, clear_pipeline_state, list_file_records
+
+@router.get("/pipeline/state")
+async def load_pipeline():
+    """Load saved pipeline state (for resume after refresh)."""
+    state = get_pipeline_state()
+    state["files"] = list_file_records()
+    return state
+
+
+@router.post("/pipeline/state")
+async def save_pipeline(state: dict):
+    """Save pipeline state (called after each pipeline step)."""
+    for key, value in state.items():
+        if key != "files":
+            set_pipeline_state(key, value)
+    return {"status": "saved"}
+
+
+@router.delete("/pipeline/state")
+async def reset_pipeline():
+    """Clear all pipeline state."""
+    clear_pipeline_state()
+    clear_file_records()
+    return {"status": "cleared"}

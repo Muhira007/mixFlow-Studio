@@ -174,18 +174,33 @@ flowchart TD
 ## 5. Database Schema
 
 ```sql
-api_keys       (provider TEXT PK, value TEXT)
-settings       (key TEXT PK, value TEXT)
-voices         (id INTEGER PK, name TEXT, voice_id TEXT UNIQUE,
-                language TEXT, gender TEXT, label TEXT, created_at TEXT)
-script_history (id TEXT PK, script TEXT, caption TEXT,
-                product_name TEXT, style TEXT, duration TEXT,
-                audience TEXT, created_at TEXT)
-output_history (id INTEGER PK, name TEXT, duration TEXT,
-                size TEXT, created_at TEXT)
+api_keys         (provider TEXT PK, value TEXT)
+settings         (key TEXT PK, value TEXT)
+voices           (id INTEGER PK, name TEXT, voice_id TEXT UNIQUE,
+                  language TEXT, gender TEXT, label TEXT, created_at TEXT)
+script_history   (id TEXT PK, script TEXT, caption TEXT,
+                  product_name TEXT, style TEXT, duration TEXT,
+                  audience TEXT, created_at TEXT)
+output_history   (id INTEGER PK, name TEXT, duration TEXT,
+                  size TEXT, created_at TEXT)
+file_registry    (file_id TEXT PK, original_name TEXT, original_path TEXT,
+                  working_path TEXT, was_proxied INT, original_resolution TEXT)
+pipeline_state   (key TEXT PK, value TEXT)  -- save/resume workflow
 ```
 
 **Live DB Browser:** `http://localhost:8000/api/db`
+
+### 5.1 Pipeline Persistence
+
+Semua state workflow video disimpan di SQLite — user bisa **resume** setelah refresh:
+
+| Data | Disimpan saat |
+|---|---|
+| File IDs | Upload footage |
+| Analysis results | Analyze selesai |
+| Trim segments | Trim selesai |
+| Concat path | Concat selesai |
+| Output history | Render selesai |
 
 ---
 

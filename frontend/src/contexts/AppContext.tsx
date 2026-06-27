@@ -78,12 +78,16 @@ export type AppState = {
   };
   uploadedFiles: File[];
   uploadedFileMeta: FileMeta[];
+  uploadedFileIds: string[]; // backend file IDs from /api/video/upload
   scriptSource: 'text' | 'audio';
   scriptText: string;
   uploadedAudio: File | null;
   ttsVoices: TtsVoice[];
   audioSamples: Record<string, string>; // voiceId → objectURL
-  ttsAudio: { url: string; duration: number } | null;
+  ttsAudio: { url: string; filename: string; duration: number } | null;
+  libraryAudio: { url: string; filename: string } | null;
+  trimSegments: any[];
+  concatPath: string | null;
   selectedVoice: string;
   outputResolution: '1080×1920' | '720×1280';
   pipelineStep: PipelineStep;
@@ -105,7 +109,10 @@ type Action =
   | { type: 'SET_SCRIPT_TEXT'; text: string }
   | { type: 'SET_UPLOADED_AUDIO'; file: File | null }
   | { type: 'SET_VOICE'; voice: string }
-  | { type: 'SET_TTS_AUDIO'; audio: { url: string; duration: number } | null }
+  | { type: 'SET_TTS_AUDIO'; audio: { url: string; filename: string; duration: number } | null }
+  | { type: 'SET_LIBRARY_AUDIO'; audio: { url: string; filename: string } | null }
+  | { type: 'SET_TRIM_SEGMENTS'; segments: any[] }
+  | { type: 'SET_CONCAT_PATH'; path: string | null }
   | { type: 'ADD_TTS_VOICE'; voice: TtsVoice }
   | { type: 'REMOVE_TTS_VOICE'; index: number }
   | { type: 'UPDATE_TTS_VOICE'; index: number; voice: TtsVoice }
@@ -114,6 +121,8 @@ type Action =
   | { type: 'LOAD_VOICES'; voices: TtsVoice[] }
   | { type: 'SET_OUTPUT_RESOLUTION'; resolution: '1080×1920' | '720×1280' }
   | { type: 'SET_PIPELINE_STEP'; step: PipelineStep }
+  | { type: 'ADD_FILE_IDS'; ids: string[] }
+  | { type: 'CLEAR_FILE_IDS' }
   | { type: 'SET_ANALYSIS'; results: AnalysisResult[] }
   | { type: 'ADD_OUTPUT'; video: OutputVideo }
   | { type: 'REMOVE_OUTPUT'; index: number }
@@ -146,12 +155,16 @@ const initialState: AppState = {
   },
   uploadedFiles: [],
   uploadedFileMeta: [],
+  uploadedFileIds: [],
   scriptSource: 'text',
   scriptText: '',
   uploadedAudio: null,
   ttsVoices: [],
   audioSamples: {},
   ttsAudio: null,
+  libraryAudio: null,
+  trimSegments: [],
+  concatPath: null,
   selectedVoice: '21m00Tcm4TlvDq8ikWAM',
   outputResolution: '1080×1920',
   pipelineStep: 'idle',
@@ -225,6 +238,15 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_TTS_AUDIO':
       return { ...state, ttsAudio: action.audio, pipelineStep: action.audio ? 'tts' : state.pipelineStep };
 
+    case 'SET_LIBRARY_AUDIO':
+      return { ...state, libraryAudio: action.audio, pipelineStep: action.audio ? 'tts' : state.pipelineStep };
+
+    case 'SET_TRIM_SEGMENTS':
+      return { ...state, trimSegments: action.segments };
+
+    case 'SET_CONCAT_PATH':
+      return { ...state, concatPath: action.path };
+
     case 'ADD_TTS_VOICE':
       return { ...state, ttsVoices: [...state.ttsVoices, action.voice] };
 
@@ -258,6 +280,12 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'SET_PIPELINE_STEP':
       return { ...state, pipelineStep: action.step };
+
+    case 'ADD_FILE_IDS':
+      return { ...state, uploadedFileIds: [...state.uploadedFileIds, ...action.ids] };
+
+    case 'CLEAR_FILE_IDS':
+      return { ...state, uploadedFileIds: [] };
 
     case 'SET_ANALYSIS':
       return { ...state, analysisResults: action.results };

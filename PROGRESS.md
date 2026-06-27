@@ -9,30 +9,39 @@
 
 ### Backend (FastAPI)
 - [x] Struktur FastAPI + Uvicorn server
-- [x] SQLite database (6 tabel: api_keys, settings, voices, script_history, output_history)
-- [x] TTS Module: ElevenLabs integration, chunking, error handling (401/429/timeout)
-- [x] Script Generator: DeepSeek, Gemini, OpenAI support
+- [x] SQLite database (8 tabel: api_keys, settings, voices, script_history, output_history, file_registry, pipeline_state)
+- [x] TTS Module: ElevenLabs integration, chunking, error handling (401/429/timeout/koneksi)
+- [x] Script Generator: DeepSeek, Gemini, OpenAI — prompt singkat, anti-kontradiksi
 - [x] Product scraper (BeautifulSoup)
-- [x] Voice CRUD API + audio sample upload/download
+- [x] Voice CRUD API + audio sample upload/download/play
 - [x] Global sync API (`GET /api/sync`, `POST /api/sync/*`)
 - [x] DB Browser (`GET /api/db`) — live HTML view
-- [x] Audio upload + library endpoint
+- [x] Audio upload + library endpoint (max 5 terbaru)
 - [x] Audio sample persistence (disk-based, `has_sample` flag)
+- [x] Video upload → auto-proxy detection → analyze → trim → concat → render pipeline
+- [x] Adaptive trim: center-based trimming (buang kiri+kanan), proportional distribution
+- [x] Pipeline state persistence (save/resume after refresh)
 
 ### Frontend (Next.js 16)
 - [x] 4 halaman: Video Editor, Script Generator, Settings, Outputs
-- [x] 22+ React components (shared, editor, script-gen, settings)
-- [x] Video Editor: UploadZone (drag-drop, sort, thumbnail), ScriptTextarea, ProgressPipeline
+- [x] 20+ React components (shared, editor, script-gen, settings)
+- [x] Video Editor: UploadZone (drag-drop, sort, thumbnail, XHR progress per file)
+- [x] ScriptTextarea: TTS generation real API, Audio Library picker
+- [x] ProgressPipeline: TTS step clickable → popup audio player
+- [x] AnalysisTable: real API results, loading state, progress indicator
+- [x] Action bar: Analyze → Trim+Concat → Render → Download (semua real API)
 - [x] Script Generator: ProductInput (name/URL toggle), ConfigSelects, ScriptOutput, ScriptHistory
 - [x] 16 gaya bahasa + 8 label use case
 - [x] Settings: API keys, TTS voice manager (multi-voice), VideoSettings, DangerZone
 - [x] TTS Voice form: nama, Voice ID, bahasa, gender, label + audio sample upload
 - [x] Audio player: play/preview di Settings + Video Editor
-- [x] Progress Pipeline: TTS step clickable → popup audio player
-- [x] Audio Library: list hasil TTS + upload, max 5 terbaru
-- [x] Riwayat naskah: persistent, expand/collapse, pakai ulang di editor
+- [x] Audio Library: list hasil TTS + upload, max 5 terbaru, dipilih untuk render
+- [x] Riwayat naskah: persistent di SQLite, expand/collapse, pakai ulang di editor
 - [x] Sorting footage: by upload, name, size, date + number labels + thumbnail preview
+- [x] Upload progress: per-file bar dengan %, MB, kecepatan
 - [x] Dark theme (CSS variables), responsive (desktop/tablet/mobile)
+- [x] Pipeline resume: setelah refresh, file IDs + analysis + trim + concat direstore dari SQLite
+- [x] Full SQLite: semua data persistent (API keys, voices, scripts, output, pipeline state)
 
 ### DevOps
 - [x] `start-all.sh` / `stop-all.sh` — pre-start cleanup, port checking, cache clearing
