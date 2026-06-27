@@ -109,28 +109,45 @@ gantt
 
 ---
 
-## Fase 2: Modul TTS (Eleven Labs)
+## Fase 2: Modul Audio (TTS + Audio Upload)
 **Status:** ⬜ Not Started  
-**File:** `src/tts.py`
+**File:** `src/tts.py`, `src/audio_handler.py`
 
+### 2a. TTS Generation (Eleven Labs) — sumber = "Dari Teks"
 - [ ] Implementasi `text_to_speech(text, api_key, voice_id) → (Path, float)`
 - [ ] Handle chunking untuk teks panjang (>5000 karakter)
 - [ ] Return durasi audio (detik)
 - [ ] Error handling: invalid API key, quota habis, timeout
 
+### 2b. Audio Upload — sumber = "Dari Audio"
+- [ ] Terima upload file .mp3 / .wav dari user
+- [ ] Validasi format & durasi (maks 120 detik)
+- [ ] Ambil durasi audio via FFprobe → target durasi untuk adaptive trim
+- [ ] Tidak perlu TTS — audio langsung dipakai untuk render
+
 ---
 
-## Fase 3: Modul Video Processor (Analyze + Adaptive Trim + Concat)
+## Fase 3: Modul Video Processor (Pre-process + Analyze + Trim + Concat)
 **Status:** ⬜ Not Started  
 **File:** `src/video_processor.py`
 
-### 3a. Frame Analysis
+### 3a. Pre-process — Auto-Proxy untuk High-Resolution
+- [ ] Fungsi `detect_resolution(filepath) → (width, height)` via FFprobe
+- [ ] Threshold: lebar >1080 atau tinggi >1920 → perlu proxy
+- [ ] Fungsi `create_proxy(filepath, target=(1080,1920)) → Path`
+  - FFmpeg: `scale + pad`, preset `veryfast`, CRF 23
+  - Output: `uploads/proxy/proxy_<nama_asli>_1080p.mp4`
+- [ ] Semua tahap berikutnya berjalan di proxy (bukan 4K asli)
+- [ ] File asli tetap utuh di `uploads/`
+
+### 3b. Frame Analysis
 - [ ] Implementasi deteksi blur (Laplacian variance via OpenCV)
 - [ ] Implementasi deteksi guncangan (frame-to-frame difference)
 - [ ] Fungsi `analyze_footage(filepath) → dict`
 - [ ] Return: `{good_start_frame, good_end_frame, total_frames, fps}`
+- [ ] Analisis berjalan di 1080p proxy (4× lebih cepat dari 4K)
 
-### 3b. Adaptive Trim Algorithm
+### 3c. Adaptive Trim Algorithm
 - [ ] Fungsi `adaptive_trim(analyses, target_duration, min_keep=3.0) → list[ClipSegment]`
 - [ ] Hitung total good duration semua footage
 - [ ] Distribusi pemangkasan proporsional
@@ -138,9 +155,9 @@ gantt
 - [ ] Cascade/iteratif sampai durasi ≈ target
 - [ ] Fallback: trim persentase (10% awal, 10% akhir)
 
-### 3c. Resize & Concat
-- [ ] Fungsi `concat_clips(segments) → VideoFileClip`
-- [ ] Resize/crop ke 9:16 (1080×1920)
+### 3d. Resize & Concat
+- [ ] Fungsi `concat_clips(segments, resolution) → VideoFileClip`
+- [ ] Resize/crop ke 9:16 (1080×1920 atau 720×1280 sesuai pilihan user)
 - [ ] Concat semua klip jadi satu
 
 ---
@@ -149,7 +166,14 @@ gantt
 **Status:** ⬜ Not Started  
 **File:** `src/renderer.py`
 
-- [ ] Fungsi `render(video_clip, audio_path) → Path`
+- [ ] Fungsi `render(video_clip, audio_path, resolution) → Path`
+- [ ] Overlay audio ke video
+- [ ] Encoding parameter:
+  - **1080p:** preset `medium`, CRF 20
+  - **720p:** preset `fast`, CRF 22
+- [ ] Audio: AAC 128kbps
+- [ ] Write output H.264 + AAC, vertical 9:16
+- [ ] Handle durasi mismatch (audio > video atau sebaliknya)
 - [ ] Overlay audio ke video
 - [ ] Write output H.264 + AAC, 1080×1920
 - [ ] Handle durasi mismatch (audio > video atau sebaliknya)

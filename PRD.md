@@ -98,6 +98,20 @@ Upload Footage
 | Render (60s) | 15-30 menit | 3-7 menit |
 | **Total** | **16-32 menit** | **4-8 menit** |
 
+**Parameter Encoding (FFmpeg libx264):**
+
+| Tahap | Preset | CRF | Tujuan |
+|---|---|---|---|
+| **Proxy** (4K→1080p) | `veryfast` | 23 | File sementara, kecepatan prioritas |
+| **Render Final** (1080p) | `medium` | 20 | Output akhir user, kualitas baik |
+| **Render Final** (720p) | `fast` | 22 | Resolusi rendah, tidak perlu agresif |
+
+**Catatan CRF vs Preset:**
+- **CRF** mengontrol kualitas visual (0=lossless, 51=terburuk). Rentang rekomendasi: 18-23.
+- **Preset** mengontrol kecepatan encode vs efisiensi kompresi. Pada CRF yang sama, `fast` dan `slow` hasilkan **kualitas visual hampir identik** — yang beda cuma ukuran file.
+- CRF 23 vs 20 di layar HP (TikTok/Shopee): **tidak ada perbedaan kasat mata** — platform mengompres ulang dengan bitrate rendah (~2-4 Mbps). CRF 23 sudah overkill untuk output final.
+- Proxy pakai `veryfast`: file ~15-20% lebih besar dari `medium`, tapi tidak relevan karena file sementara.
+
 ### C. Settings (Panel 3)
 Konfigurasi API keys untuk semua layanan eksternal:
 
