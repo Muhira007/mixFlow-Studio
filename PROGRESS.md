@@ -1,7 +1,7 @@
 # 📊 Development Progress — mixFlow
 
 **Proyek dimulai:** 27 Juni 2026  
-**Status:** 🔴 Not Started
+**Status:** 🟡 Frontend MVP Selesai — Backend Belum Dimulai
 
 ---
 
@@ -69,15 +69,30 @@ gantt
 **Status:** 🔄 In Progress
 
 - [x] Inisialisasi struktur folder proyek
-- [ ] Buat `requirements.txt` dan install dependencies
+- [ ] Buat `backend/requirements.txt` dan install dependencies
 - [x] Buat `.env.example` (template, aman di-commit)
 - [x] Buat `.gitignore` (proteksi .env, uploads/, outputs/)
-- [ ] Buat `app.py` (entry point Streamlit)
-- [ ] Buat folder `pages/`
+- [x] Buat frontend HTML/CSS/JS dari mockup `contoh-layout/`
 - [x] Buat folder `uploads/` dan `outputs/`
-- [ ] Buat `src/__init__.py`
+- [ ] Buat `backend/` struktur FastAPI
 - [x] Setup Git + push repo ke GitHub
 - [x] Setup proteksi file sensitif (.gitignore)
+
+### 1a. Frontend (HTML/CSS/JS) ✅ Selesai
+**Lokasi:** `frontend/`
+- [x] `frontend/index.html` — Single-page app 4 panel (Video Editor, Script Generator, Settings, Output)
+- [x] `frontend/css/style.css` — Design system dark theme, responsive 3 breakpoint, 1046 baris
+- [x] `frontend/js/app.js` — Engine: navigasi panel, state management, localStorage, upload file, clipboard, toast, dialog konfirmasi, 962 baris
+- [x] Tema dark (#0a0a14) + aksen gradient ungu — sesuai mockup `contoh-layout/`
+- [x] Responsive: Desktop (sidebar 260px), Tablet (grid 2 kolom), Mobile (hamburger + bottom nav)
+- [x] Semua API key & settings persisten di localStorage
+- [x] Upload footage: drag & drop, validasi format/ukuran, file chips
+- [x] Navigasi panel: sidebar + bottom nav + keyboard shortcuts (Ctrl+1..4)
+- [x] Script Generator: demo output (Version A, B, Caption), copy buttons, "Pakai di Editor"
+- [x] Progress Pipeline: 6-step visual (Upload → TTS → Analyze → Trim → Concat → Render)
+- [x] Danger Zone: hapus footage, hapus output, reset semua dengan dialog konfirmasi
+- [x] Toast notification system dengan auto-dismiss
+- [x] Swipe gesture mobile untuk buka sidebar
 
 ---
 
@@ -148,35 +163,44 @@ gantt
 
 ---
 
-## Fase 6: UI Streamlit (3 Halaman)
-**Status:** ⬜ Not Started
+## Fase 6: UI (Frontend HTML + Backend API)
+**Status:** 🔄 Frontend selesai, Backend belum
 
-### 6a. Main Page — Video Editor (`app.py`)
-- [ ] Sidebar: navigasi + API keys quick-access
-- [ ] File uploader (multi-file, drag & drop)
-- [ ] Text area untuk naskah VO
-- [ ] Voice selector (Eleven Labs)
-- [ ] Progress bar: [Analyze] → [TTS] → [Adaptive Trim] → [Concat] → [Render]
-- [ ] Download button
-- [ ] Preview video (opsional)
+### 6a. Main Page — Video Editor (`frontend/index.html` panel-editor)
+- [x] Sidebar: navigasi + API keys quick-access
+- [x] File uploader (multi-file, drag & drop, validasi format)
+- [x] Text area untuk naskah VO (sync ke localStorage)
+- [x] Voice selector (Eleven Labs)
+- [x] Progress bar: [Upload] → [TTS] → [Analyze] → [Trim] → [Concat] → [Render]
+- [x] Stat cards: footage count, estimasi durasi, output format
+- [x] Analysis table (placeholder, menunggu backend)
+- [x] Action buttons: Analyze, Trim, Render, Simulasi Pipeline
+- [ ] Download button (butuh backend)
 
-### 6b. Script Generator (`pages/1_📝_Script_Generator.py`)
-- [ ] Input: nama produk
-- [ ] Select: AI provider (DeepSeek / Gemini / OpenAI)
-- [ ] Select: durasi video (15s / 30s / 60s / 90s)
-- [ ] Select: gaya bahasa
-- [ ] Select: target audiens
-- [ ] Output: text area (bisa copy-paste ke Video Editor)
-- [ ] Tombol "Copy to Editor"
+### 6b. Script Generator (`frontend/index.html` panel-script-gen)
+- [x] Input: nama produk (dengan default value)
+- [x] Input: URL produk (opsional, scraper butuh backend)
+- [x] Select: AI provider (DeepSeek / Gemini / OpenAI)
+- [x] Select: durasi video (15s / 30s / 60s / 90s)
+- [x] Select: gaya bahasa (5 opsi)
+- [x] Select: target audiens (5 opsi)
+- [x] Output box: Version A (Hard-Selling), Version B (Storytelling), Caption
+- [x] Copy buttons per-version + copy all
+- [x] Tombol "Pakai di Editor" → switch panel + kirim naskah
+- [x] Aturan konten warning box
+- [x] Generate dengan loading spinner (simulasi, butuh backend)
 
-### 6c. Settings (`pages/2_⚙️_Settings.py`)
-- [ ] Input: Eleven Labs API Key
-- [ ] Input: DeepSeek API Key
-- [ ] Input: Gemini API Key
-- [ ] Input: OpenAI API Key
-- [ ] Select: Default TTS Voice ID
-- [ ] Number input: Min keep duration (default 3 detik)
-- [ ] Simpan di `st.session_state`
+### 6c. Settings (`frontend/index.html` panel-settings)
+- [x] Input: Eleven Labs API Key + indikator status
+- [x] Input: DeepSeek API Key + indikator status
+- [x] Input: Gemini API Key + indikator status
+- [x] Input: OpenAI API Key + indikator status
+- [x] Select: Default TTS Voice ID
+- [x] Number input: Min keep duration (default 3 detik)
+- [x] Output format + codec selector
+- [x] Semua setting persisten di localStorage
+- [x] Danger zone: hapus footage, hapus output, reset semua
+- [x] Tombol simpan + toast konfirmasi
 
 ---
 
