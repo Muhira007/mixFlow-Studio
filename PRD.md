@@ -41,10 +41,12 @@ Menggabungkan footage video + voice-over TTS menjadi satu video short vertical s
 | Fitur | Deskripsi |
 |---|---|
 | **Upload Footage** | Multi-file upload (.mp4, .mov, .avi), bisa drag & drop |
+| **Sumber Naskah** | Pilih: **Dari Teks** (tulis/paste naskah → TTS) ATAU **Dari Audio** (upload file .mp3/.wav langsung, skip TTS) |
 | **Auto-Analyze** | Deteksi blur (Laplacian variance) & guncangan (frame diff) per footage |
-| **Adaptive Trim** | Potong otomatis bagian awal/akhir yang jelek, durasi menyesuaikan audio TTS |
-| **TTS Generation** | Text-to-Speech via Eleven Labs API |
-| **Concat + Render** | Gabung footage + overlay audio → output 9:16 (1080×1920) H.264 |
+| **Adaptive Trim** | Potong otomatis bagian awal/akhir yang jelek, durasi menyesuaikan durasi audio (TTS atau upload) |
+| **TTS Generation** | Text-to-Speech via Eleven Labs API (hanya jika sumber naskah = "Dari Teks") |
+| **Concat + Render** | Gabung footage + overlay audio → output vertical 9:16 |
+| **Output Resolusi** | Pilih: **1080×1920** (Full HD) atau **720×1280** (HD, render lebih cepat) — H.264 |
 
 **Constraint Adaptive Trim:**
 - Setiap footage minimal tersisa **3 detik** bagian bagus
@@ -82,13 +84,19 @@ flowchart TD
     B -- Ya --> D[Panel: Video Editor]
     C5 --> D
 
-    D --> D1[Upload Footage]
-    D1 --> D2[Paste Naskah]
+    D --> D0{Pilih Sumber Naskah}
+    D0 -- Dari Teks --> D1[Upload Footage]
+    D1 --> D2[Tulis/Paste Naskah]
     D2 --> D3[Generate TTS]
+    D0 -- Dari Audio --> D1a[Upload Footage]
+    D1a --> D2a[Upload Audio .mp3/.wav]
+    D2a --> D3a[Ambil Durasi Audio]
+
     D3 --> D4[Analyze Footage]
+    D3a --> D4
     D4 --> D5[Adaptive Trim]
     D5 --> D6[Concat Clips]
-    D6 --> D7[Render Final]
+    D6 --> D7[Render Final<br/>1080p atau 720p]
     D7 --> E[📥 Download .mp4]
     E --> F[📤 Upload ke TikTok/Shopee]
 ```
@@ -99,7 +107,9 @@ flowchart TD
 flowchart TD
     subgraph INPUT[Input]
         A1[Upload Footage<br/>1.mp4, 2.mp4, ...N.mp4]
-        A2[Naskah VO]
+        A2{Pilih Sumber Naskah}
+        A2 -- Dari Teks --> A3[Naskah VO]
+        A2 -- Dari Audio --> A4[Upload Audio .mp3/.wav]
     end
 
     subgraph TTS[TTS Engine]
@@ -127,13 +137,14 @@ flowchart TD
 
     subgraph OUTPUT[Render]
         E1[Concat Semua Klip]
-        E2[Resize 9:16 1080x1920]
-        E3[Overlay Audio TTS]
+        E2[Resize 9:16<br/>1080×1920 atau 720×1280]
+        E3[Overlay Audio TTS/Upload]
         E4[Write .mp4 Final]
     end
 
     A1 --> C1
-    A2 --> B1 --> B2
+    A3 --> B1 --> B2
+    A4 --> B2
     B2 -- target_durasi --> D2
     C1 --> C3
     C2 --> C3
@@ -262,7 +273,7 @@ flowchart TD
 
 ### 5.1 Desain Referensi
 
-Mockup layout tersedia di `contoh-layout/index.html` sebagai acuan visual:
+Desain frontend sudah diimplementasi di `frontend/` (Next.js 16 App Router) dengan acuan:
 - **Tema:** Dark mode penuh (background `#0a0a14`) — vibe video editor profesional
 - **Aksen:** Gradient ungu (`#6c5ce7 → #a855f7`) untuk tombol primary, sidebar active state, glow effects
 - **Layout:** Sidebar (desktop) / Bottom nav (mobile) + Topbar + Content area
@@ -281,10 +292,12 @@ components/
 │   └── MainLayout.tsx           # Shell: sidebar + topbar + content + bottomnav
 │
 ├── editor/
-│   ├── UploadZone.tsx           # Drag & drop footage (.mp4, .mov, .avi)
-│   ├── FileChipList.tsx         # Daftar file terupload (chip + remove)
-│   ├── ScriptTextarea.tsx       # Textarea naskah VO
+│   ├── UploadZone.tsx           # Drag & drop footage (.mp4, .mov, .avi) + file chips
+│   ├── ScriptSourceToggle.tsx   # Toggle: "Dari Teks" vs "Dari Audio"
+│   ├── ScriptTextarea.tsx       # Textarea naskah VO (jika sumber = teks)
+│   ├── AudioUploader.tsx        # Upload file audio .mp3/.wav (jika sumber = audio)
 │   ├── VoiceSelector.tsx        # Dropdown suara Eleven Labs
+│   ├── ResolutionSelector.tsx   # Pilih output: 1080×1920 atau 720×1280
 │   ├── ProgressPipeline.tsx     # 6-step progress bar (Upload→TTS→Analyze→Trim→Concat→Render)
 │   ├── AnalysisTable.tsx        # Tabel hasil analisis per footage (blur, shake, good segment)
 │   └── VideoStats.tsx           # Stat cards (footage count, target durasi, output format)
@@ -342,11 +355,13 @@ Tidak butuh Redux — cukup React Context + useReducer untuk:
 AppContext
 ├── apiKeys: { elevenlabs, deepseek, gemini, openai }  # dari Settings
 ├── uploadedFiles: File[]                                 # footage di Video Editor
-├── scriptText: string                                    # naskah VO
+├── scriptSource: 'text' | 'audio'                        # sumber naskah
+├── scriptText: string                                    # naskah VO (jika sumber = text)
+├── uploadedAudio: File | null                            # file audio upload (jika sumber = audio)
 ├── selectedVoice: string                                 # suara TTS
 ├── pipelineStep: 'idle' | 'upload' | 'tts' | 'analyze' | 'trim' | 'concat' | 'render' | 'done'
 ├── analysisResults: AnalysisResult[]                     # hasil analisis footage
-├── outputVideoUrl: string | null                         # URL download hasil render
+├── outputResolution: '1080×1920' | '720×1280'           # resolusi output
 └── toasts: Toast[]                                       # antrian notifikasi
 ```
 
@@ -389,7 +404,7 @@ AppContext
 ## 6. Struktur Proyek
 
 ```
-mixFlow/
+mixflow/
 ├── frontend/                        # Next.js app
 │   ├── app/
 │   │   ├── layout.tsx               # Root layout
@@ -432,10 +447,7 @@ mixFlow/
 │   ├── requirements.txt
 │   └── .env.example
 │
-├── contoh-layout/                   # Mockup HTML referensi desain
-│   └── index.html
-│
-├── uploads/                         # Temp footage (gitignored)
+├── uploads/                         # Temp footage & audio (gitignored)
 ├── outputs/                         # Rendered videos (gitignored)
 ├── .gitignore
 ├── PRD.md                           # Dokumen ini
@@ -544,7 +556,8 @@ Karena aplikasi berjalan di **WSL Ubuntu** (bukan native Linux), ada beberapa ha
 | **Generate TTS** (30s naskah) | ~5-10 detik | Tergantung latency Eleven Labs API |
 | **Analyze Footage** (4 file × 15s) | ~10-20 detik | OpenCV frame-by-frame, CPU-bound |
 | **Adaptive Trim** | < 1 detik | Hanya kalkulasi durasi |
-| **Render Final** (60s output, H.264) | 3-7 menit | ⚠️ Proses terberat. libx264 software encoding 100% CPU |
+| **Render Final** (60s output, 1080p H.264) | 3-7 menit | ⚠️ Proses terberat. libx264 software encoding 100% CPU |
+| **Render Final** (60s output, 720p H.264) | 1.5-3 menit | ✅ Lebih cepat, kualitas cukup untuk TikTok/Shopee |
 | **Generate Script** (AI) | ~3-8 detik | Tergantung provider & latency API |
 
 **Rekomendasi untuk development & testing:**
