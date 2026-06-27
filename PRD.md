@@ -513,7 +513,7 @@ Karena aplikasi berjalan di **WSL Ubuntu** (bukan native Linux), ada beberapa ha
 
 **File System:**
 - ⚠️ **JANGAN** menyimpan project di `/mnt/c/` (filesystem Windows) — I/O lambat, permission error
-- ✅ Simpan project di dalam WSL native: `~/tester/mixFlow/` — I/O NVMe penuh
+- ✅ Simpan project di dalam WSL native: `~/tester/mixflow/` — I/O NVMe penuh
 
 **RAM Allocation:**
 - Buat file `.wslconfig` di Windows (`%USERPROFILE%\.wslconfig`):
