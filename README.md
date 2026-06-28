@@ -129,65 +129,86 @@ mixflow/
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation (Zero to Final)
 
-### Prasyarat
+Tutorial ini dirancang dari nol (komputer Windows baru) hingga aplikasi bisa berjalan.
 
-- **Windows 10/11** dengan **WSL2 Ubuntu** terinstall
-- **Python 3.11+** (di dalam WSL)
-- **Node.js 22+** + **npm** (di dalam WSL)
-- **FFmpeg** + **FFprobe** (untuk video processing)
+### Tahap 1: Install WSL (Windows Subsystem for Linux)
+Jika Anda pengguna Windows 10/11, mixFlow wajib dijalankan di dalam WSL karena library pemrosesan video (seperti `ffmpeg` dan `moviepy`) jauh lebih stabil di lingkungan Linux.
+
+1. Buka **PowerShell** sebagai Administrator (klik kanan Start, pilih Windows PowerShell (Admin)).
+2. Ketik perintah berikut dan tekan Enter:
+   ```powershell
+   wsl --install
+   ```
+3. Proses ini akan otomatis mengunduh dan menginstal **Ubuntu** sebagai distro default.
+4. Jika diminta, **Restart PC/Laptop Anda**.
+5. Setelah restart, jendela terminal Ubuntu akan terbuka. Masukkan **Username** dan **Password** baru untuk Ubuntu Anda (password tidak akan terlihat saat diketik, itu normal).
+
+### Tahap 2: Install Dependensi Sistem (di dalam Ubuntu)
+Buka terminal Ubuntu (cari "Ubuntu" di Start menu), lalu jalankan perintah berikut secara berurutan:
 
 ```bash
-# Di WSL Ubuntu:
-sudo apt update
-sudo apt install ffmpeg python3-venv python3-pip -y
+# 1. Update sistem paket Ubuntu
+sudo apt update && sudo apt upgrade -y
 
-# Install Node.js via nvm
+# 2. Install FFmpeg (untuk video) & dependensi Python (untuk library Pillow/AI)
+sudo apt install ffmpeg python3-venv python3-pip python3-dev libjpeg-dev zlib1g-dev -y
+
+# 3. Install Node.js (via NVM)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+
+> **Penting**: Setelah menginstal NVM, tutup terminal Ubuntu Anda lalu **buka kembali** agar NVM bisa digunakan.
+
+```bash
+# 4. Install Node.js versi 22 (LTS)
 nvm install 22
 ```
 
-### 1. Clone & Setup Backend
+### Tahap 3: Clone & Setup mixFlow
+
+Masih di dalam terminal Ubuntu, mari kita unduh dan setup aplikasinya.
 
 ```bash
-# Clone repo
-cd ~
+# 1. Clone repositori ke dalam folder 'aplikasi' (atau folder pilihan Anda)
+mkdir -p ~/aplikasi
+cd ~/aplikasi
 git clone https://github.com/Muhira007/mixflow.git
 cd mixflow
 
-# Setup Python virtual environment
+# 2. Setup Backend (Python Virtual Environment)
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Copy .env template & isi API key
+# 3. Buat file konfigurasi (.env)
 cp ../.env.example ../.env
-nano ../.env   # isi minimal DEEPSEEK_API_KEY + ELEVENLABS_API_KEY
 ```
-
-### 2. Setup Frontend
+*(Catatan: Buka file `.env` dengan editor seperti `nano ../.env` dan masukkan API Key Anda, minimal `DEEPSEEK_API_KEY` dan `ELEVENLABS_API_KEY`)*
 
 ```bash
-cd ~/mixflow/frontend
+# 4. Setup Frontend (Next.js)
+cd ../frontend
 npm install
+cd ..
 ```
 
-### 3. Start Aplikasi
+### Tahap 4: Menjalankan Aplikasi
+Anda hanya perlu menjalankan satu script untuk menghidupkan semuanya (Database, Frontend, Backend).
 
-**Dari Windows (double-click):**
-- `start.bat` — Start backend + frontend
-- `stop.bat` — Stop semua
-
-**Dari WSL terminal:**
 ```bash
-cd ~/mixflow
-bash start-all.sh   # Start
-bash stop-all.sh    # Stop
+# Dari dalam folder mixflow di terminal Ubuntu:
+./start-all.sh
 ```
 
-> **Akses:** Frontend `http://localhost:3000` · API Docs `http://localhost:8000/docs` · DB Browser `http://localhost:8000/api/db`
+Aplikasi sekarang bisa diakses melalui browser Windows Anda di:
+- **Aplikasi Utama**: `http://localhost:3000`
+- **API Docs**: `http://localhost:8000/docs`
+- **DB Browser**: `http://localhost:8000/api/db`
+
+*(Untuk mematikan aplikasi, jalankan `./stop-all.sh`)*
 
 ---
 
@@ -429,7 +450,7 @@ Buka `http://localhost:8000/api/db` — tampilan HTML tabel semua data live. Kli
 
 ---
 
-## ❓ FAQ
+## ❓ FAQ (Tanya Jawab & Troubleshooting)
 
 **Q: Kenapa pakai SQLite, bukan PostgreSQL/MySQL?**
 A: mixFlow adalah **desktop app** (jalan di laptop pribadi). SQLite tanpa server, tanpa setup, database 1 file langsung pakai. Cocok untuk single-user.
@@ -437,14 +458,23 @@ A: mixFlow adalah **desktop app** (jalan di laptop pribadi). SQLite tanpa server
 **Q: Kenapa pakai WSL, bukan native Windows?**
 A: Backend Python (OpenCV, moviepy, FFmpeg) jauh lebih stabil di Linux. WSL memberikan environment Linux tanpa dual-boot.
 
+**Q: Saya mendapat error `setsid: failed to execute .venv/bin/uvicorn: No such file or directory` saat menjalankan `./start-all.sh`.**
+A: Ini terjadi jika Anda memindahkan atau mengubah nama folder proyek *setelah* membuat virtual environment (`.venv`). Solusinya: masuk ke folder `backend/`, hapus folder `.venv`, lalu buat ulang dengan `python3 -m venv .venv`, aktifkan dengan `source .venv/bin/activate`, dan jalankan `pip install -r requirements.txt` lagi.
+
+**Q: Saat install `requirements.txt`, instalasi gagal dengan pesan "Failed building wheel for Pillow" atau "RequiredDependencyException: jpeg".**
+A: Ini berarti Python di WSL Anda kehilangan library sistem bahasa C untuk merender file gambar JPEG. Buka terminal Ubuntu, jalankan: `sudo apt-get update && sudo apt-get install libjpeg-dev zlib1g-dev python3-dev -y`, lalu ulangi `pip install -r requirements.txt`.
+
+**Q: Ada peringatan "Hydration Mismatch" di console inspect element (F12) browser saya.**
+A: Peringatan ini umum muncul saat menggunakan fitur mode Gelap/Terang (`next-themes`) di Next.js karena server merender tema default sedangkan browser langsung menggantinya dengan tema sistem Anda. Aplikasi ini sudah diamankan menggunakan `suppressHydrationWarning`, jadi Anda bisa mengabaikannya.
+
 **Q: Kenapa data kadang hilang saat refresh?**
-A: Buka `http://localhost:8000/api/db` — cek apakah data tersimpan di SQLite. Kalau tidak ada, berarti save gagal (cek Console F12 untuk error).
+A: Buka `http://localhost:8000/api/db` — cek apakah data tersimpan di SQLite. Kalau tidak ada, berarti proses simpan ke backend gagal (biasanya API backend terputus, silakan restart backend).
 
 **Q: Upload audio sample hilang setelah restart?**
-A: File disimpan di `backend/data/samples/`. Kalau file ada di folder itu, seharusnya muncul. Buka `/api/db` dan cek `has_sample` = True.
+A: File audio yang di-upload disimpan secara lokal di `backend/data/samples/`. Kalau file ada di folder itu, seharusnya muncul. Buka `/api/db` dan cek apakah kolom `has_sample` bernilai True.
 
 **Q: Naskah AI hasilnya kosong?**
-A: Pastikan API key provider (DeepSeek/Gemini) valid dan punya kuota. Cek error di toast atau Network tab.
+A: Pastikan API key provider (DeepSeek/Gemini/OpenAI) Anda valid, tidak kadaluarsa, dan memiliki saldo/kuota. Anda bisa mengecek error lebih detail melalui notifikasi (toast) merah di layar atau lewat tab Network di Inspect Element.
 
 ---
 
