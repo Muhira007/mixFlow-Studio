@@ -3,6 +3,7 @@
 import { Menu, ChevronRight, Sparkles, Bell, LayoutGrid } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { PANEL_NAMES } from '@/lib/constants';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 export function Topbar() {
   const pathname = usePathname();
@@ -54,6 +55,7 @@ export function Topbar() {
 
       {/* Right Side Actions */}
       <div className="ml-auto flex items-center gap-3 shrink-0">
+        <ThemeToggle />
         <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all relative group">
           <Bell size={17} className="group-hover:rotate-12 transition-transform" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--danger)] rounded-full border-2 border-[var(--bg-primary)] shadow-[0_0_8px_var(--danger)] animate-pulse"></span>

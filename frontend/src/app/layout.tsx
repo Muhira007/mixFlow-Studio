@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ToastContainer } from '@/components/shared/Toast';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -27,12 +28,14 @@ export default function RootLayout({
   return (
     <html lang="id" className="h-full antialiased">
       <body className="h-full flex overflow-hidden">
-        <AppProvider>
-          <MainLayout>
-            {children}
-          </MainLayout>
-          <ToastContainer />
-        </AppProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AppProvider>
+            <MainLayout>
+              {children}
+            </MainLayout>
+            <ToastContainer />
+          </AppProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

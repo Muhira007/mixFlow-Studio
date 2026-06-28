@@ -223,7 +223,7 @@ export default function OutputsPage() {
                 onClick={async () => {
                   setDeleteConcatConfirm(false);
                   try {
-                    const res = await deleteCleanupConcat();
+                    const res = await deleteCleanupConcat() as any;
                     addToast(`🗑️ ${res.count} file temp concat dihapus!`, 'success');
                   } catch (e) {
                     addToast('Gagal menghapus file concat', 'error');

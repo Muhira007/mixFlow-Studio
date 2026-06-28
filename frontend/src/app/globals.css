@@ -6,6 +6,36 @@
    ======================================== */
 
 :root {
+  /* Light Theme */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #ffffff;
+  --border: #e2e8f0;
+  --border-focus: #6c5ce7;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108, 92, 231, 0.15);
+  --accent-2: #a855f7;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+
+  /* Layout dimensions */
+  --sidebar-width: 260px;
+  --topbar-height: 56px;
+  --bottomnav-height: 64px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+}
+
+.dark {
+  /* Dark Theme */
   --bg-primary: #0a0a14;
   --bg-secondary: #12121f;
   --bg-card: #181830;
@@ -23,12 +53,6 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
-  --sidebar-width: 260px;
-  --topbar-height: 56px;
-  --bottomnav-height: 64px;
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
 }
 
 /* Base */

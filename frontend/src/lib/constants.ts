@@ -18,6 +18,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'auto-cover', label: 'Auto Cover', icon: '🖼️', path: '/auto-cover' },
   { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
   { id: 'history', label: 'Hasil Render', icon: '📁', path: '/outputs' },
+  { id: 'about', label: 'Tentang Aplikasi', icon: 'ℹ️', path: '/about' },
 ];
 
 export const PANEL_NAMES: Record<string, string> = {
@@ -25,6 +26,7 @@ export const PANEL_NAMES: Record<string, string> = {
   'script-gen': 'Script Generator',
   settings: 'Settings',
   history: 'Hasil Render',
+  about: 'Tentang Aplikasi',
 };
 
 // AI Providers
