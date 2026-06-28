@@ -22,6 +22,7 @@ def render_final(
     audio_path: Path,
     output_width: int = 1080,
     output_height: int = 1920,
+    cover_image_path: Path = None,
 ) -> Path:
     """
     Render final video: overlay audio onto video, encode with appropriate settings.
@@ -31,6 +32,7 @@ def render_final(
         audio_path: Path to audio file (.mp3 / .wav)
         output_width: Target width (1080 or 720)
         output_height: Target height (1920 or 1280)
+        cover_image_path: Path to cover image to overlay as first frame
     """
     output_path = OUTPUTS_DIR / f"mixflow_{uuid.uuid4().hex[:8]}.mp4"
 
@@ -51,6 +53,25 @@ def render_final(
         "ffmpeg", "-y",
         "-i", str(video_path),
         "-i", str(audio_path),
+    ]
+
+    if cover_image_path and cover_image_path.exists():
+        cmd.extend(["-loop", "1", "-t", "0.1", "-i", str(cover_image_path)])
+        # scale cover image to fit, then overlay for 0.1 seconds
+        filter_complex = f"[2:v]scale={output_width}:{output_height}:force_original_aspect_ratio=increase,crop={output_width}:{output_height}[cov];[0:v][cov]overlay=enable='between(t,0,0.1)'[outv]"
+        cmd.extend([
+            "-filter_complex", filter_complex,
+            "-map", "[outv]",
+            "-map", "1:a",
+        ])
+    else:
+        cmd.extend([
+            "-c:v", "libx264", # Will be mapped normally if no filter
+            "-map", "0:v",
+            "-map", "1:a",
+        ])
+
+    cmd.extend([
         "-c:v", "libx264",
         "-crf", str(crf),
         "-preset", preset,
@@ -58,7 +79,7 @@ def render_final(
         "-b:a", AUDIO_BITRATE,
         "-pix_fmt", "yuv420p",
         "-movflags", "+faststart",  # web-optimized
-    ]
+    ])
 
     # Handle duration mismatch
     if audio_dur > 0 and video_dur > 0:

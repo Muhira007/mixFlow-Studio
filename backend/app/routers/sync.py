@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from app.database import (
     dump_all, set_api_key, set_setting,
     add_script, delete_script,
-    add_output, delete_output,
+    add_output, delete_output, clear_output_history
 )
 
 router = APIRouter()
@@ -96,9 +96,50 @@ async def save_output(payload: OutputPayload):
     return result
 
 
+@router.delete("/output/all")
+async def clear_all_outputs():
+    clear_output_history()
+    import shutil, os
+    from app.config import OUTPUTS_DIR
+    count = 0
+    if OUTPUTS_DIR.exists():
+        for f in OUTPUTS_DIR.glob("*.mp4"):
+            if f.is_file():
+                f.unlink()
+                count += 1
+    return {"status": "deleted", "count": count}
+
+
 @router.delete("/output/{output_id}")
 async def remove_output(output_id: int):
     ok = delete_output(output_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Output tidak ditemukan")
     return {"status": "deleted", "id": output_id}
+
+
+# ── Cleanup Utilities ──
+
+@router.delete("/cleanup/concat")
+async def cleanup_concat():
+    import os
+    from app.config import OUTPUTS_DIR
+    count = 0
+    if OUTPUTS_DIR.exists():
+        for f in OUTPUTS_DIR.glob("concat_*.mp4"):
+            if f.is_file():
+                f.unlink()
+                count += 1
+    return {"status": "deleted", "count": count, "type": "concat"}
+
+@router.delete("/cleanup/captioned")
+async def cleanup_captioned():
+    import os
+    from app.config import OUTPUTS_DIR
+    count = 0
+    if OUTPUTS_DIR.exists():
+        for f in OUTPUTS_DIR.glob("captioned_*.mp4"):
+            if f.is_file():
+                f.unlink()
+                count += 1
+    return {"status": "deleted", "count": count, "type": "captioned"}

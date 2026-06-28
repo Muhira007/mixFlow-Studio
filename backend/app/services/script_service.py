@@ -32,10 +32,11 @@ ATURAN MUTLAK:
 6. Gunakan bahasa Indonesia yang mengalir seperti orang ngomong, jangan kaku kayak baca berita
 7. Langsung mulai dengan narasi, JANGAN pakai label seperti "Naskah:" atau "Voice-over:"
 8. SANGAT PENTING: Kamu HARUS memenuhi TARGET JUMLAH KATA yang disebutkan di prompt user (minimal 90% dari target).
+9. SANGAT PENTING: Gunakan Audio Tags ElevenLabs di dalam naskah untuk mengekspresikan emosi/suasana (contoh: [excited], [sigh], [whispers], [calm], [laughs]). Sisipkan tag ini di awal atau di tengah kalimat secara natural agar suara AI lebih hidup dan ekspresif.
 
 OUTPUT FORMAT (JSON):
 {
-  "script": "satu naskah voice-over natural.",
+  "script": "satu naskah voice-over natural dengan audio tags ElevenLabs.",
   "caption": "caption + hashtag (3-5 hashtag relevan)"
 }"""
 

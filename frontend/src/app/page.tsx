@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { VideoStats } from '@/components/editor/VideoStats';
 import { UploadZone } from '@/components/editor/UploadZone';
 import { ScriptTextarea } from '@/components/editor/ScriptTextarea';
 import { ProgressPipeline } from '@/components/editor/ProgressPipeline';
 import { AnalysisTable } from '@/components/editor/AnalysisTable';
 import { Button } from '@/components/shared/Button';
-import { analyzeFootage, trimFootage, concatFootage, renderVideo, saveOutputToHistory, loadPipelineState, savePipelineState } from '@/lib/api';
+import { analyzeFootage, trimFootage, concatFootage, renderVideo, saveOutputToHistory, loadPipelineState, savePipelineState, generateCaption, burnCaption, deleteAllFootage } from '@/lib/api';
 import { BACKEND_URL } from '@/lib/constants';
 
 export default function EditorPage() {
@@ -19,6 +18,8 @@ export default function EditorPage() {
   const [concating, setConcating] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [renderResult, setRenderResult] = useState<{ output_url: string } | null>(null);
+  const [generatingCaption, setGeneratingCaption] = useState(false);
+  const [showAudioWarning, setShowAudioWarning] = useState(false);
 
   const hasAudio = !!(state.ttsAudio || state.libraryAudio);
   const activeAudio = state.ttsAudio || state.libraryAudio;
@@ -39,6 +40,14 @@ export default function EditorPage() {
       if (data?.concat_path) {
         dispatch({ type: 'SET_CONCAT_PATH', path: data.concat_path });
       }
+      if (data?.caption_srt) {
+        dispatch({
+          type: 'SET_CAPTION_SRT',
+          srt: data.caption_srt,
+          srtPath: data.caption_srt_path || null,
+          text: null,
+        });
+      }
     }).catch(() => {});
   }, []);
 
@@ -47,6 +56,186 @@ export default function EditorPage() {
     savePipelineState(extra).catch(() => {});
   };
 
+  const handleAutoProcess = async () => {
+    if (state.uploadedFileIds.length === 0) {
+      addToast('⚠️ Upload footage terlebih dahulu', 'warning');
+      return;
+    }
+    if (!hasAudio) {
+      setShowAudioWarning(true);
+      return;
+    }
+    if (state.uploadedFileIds.length < state.uploadedFiles.length) {
+      addToast('⚠️ Masih upload ke backend... tunggu selesai', 'warning');
+      return;
+    }
+    
+    let currentAnalysis = state.analysisResults;
+    let currentTrimSegments = state.trimSegments;
+    let currentConcatPath = state.concatPath;
+    let currentCaptionSrt = state.captionSrt;
+
+    try {
+      // 1. ANALYZE
+      if (currentAnalysis.length === 0) {
+        setAnalyzing(true);
+        setAnalyzeProgress({ done: 0, total: state.uploadedFileIds.length });
+        dispatch({ type: 'SET_PIPELINE_STEP', step: 'analyze' });
+
+        const allResults: any[] = [];
+        const batchSize = 3;
+        const ids = [...state.uploadedFileIds];
+        for (let i = 0; i < ids.length; i += batchSize) {
+          const batch = ids.slice(i, i + batchSize);
+          const results = await analyzeFootage(batch);
+          allResults.push(...results);
+          setAnalyzeProgress({ done: Math.min(i + batchSize, ids.length), total: ids.length });
+        }
+        dispatch({ type: 'SET_ANALYSIS', results: allResults });
+        savePipeline({ analysis_results: allResults });
+        currentAnalysis = allResults;
+        setAnalyzing(false);
+      }
+
+      // 2. CAPTION (Optional)
+      if (!currentCaptionSrt && state.apiKeys.openai) {
+        setGeneratingCaption(true);
+        dispatch({ type: 'SET_PIPELINE_STEP', step: 'caption' });
+        const result = await generateCaption(activeAudio!.filename, state.apiKeys.openai);
+        dispatch({
+          type: 'SET_CAPTION_SRT',
+          srt: result.srt,
+          srtPath: result.srt_path,
+          text: result.text,
+        });
+        savePipeline({ caption_srt: result.srt, caption_srt_path: result.srt_path });
+        currentCaptionSrt = result.srt;
+        setGeneratingCaption(false);
+      } else if (!currentCaptionSrt) {
+        addToast('⚠️ OpenAI Key kosong, melewati proses pembuatan caption SRT.', 'info');
+      }
+
+      // 3. TRIM
+      if (currentTrimSegments.length === 0) {
+        setTrimming(true);
+        dispatch({ type: 'SET_PIPELINE_STEP', step: 'trim' });
+        const targetDur = state.ttsAudio?.duration || 60;
+        const trimResult = await trimFootage(currentAnalysis, targetDur);
+        dispatch({ type: 'SET_TRIM_SEGMENTS', segments: trimResult.segments });
+        savePipeline({ trim_segments: trimResult.segments });
+        currentTrimSegments = trimResult.segments;
+        setTrimming(false);
+      }
+
+      // 4. CONCAT
+      if (!currentConcatPath) {
+        setConcating(true);
+        dispatch({ type: 'SET_PIPELINE_STEP', step: 'concat' });
+        const concatResult = await concatFootage(currentTrimSegments, state.uploadedFileIds);
+        dispatch({ type: 'SET_CONCAT_PATH', path: concatResult.output_path });
+        savePipeline({ concat_path: concatResult.output_path });
+        currentConcatPath = concatResult.output_path;
+        setConcating(false);
+      }
+
+      // 5. RENDER
+      setRendering(true);
+      dispatch({ type: 'SET_PIPELINE_STEP', step: 'render' });
+      const w = state.outputResolution === '720×1280' ? 720 : 1080;
+      const h = state.outputResolution === '720×1280' ? 1280 : 1920;
+
+      let videoPath = currentConcatPath;
+      if (currentCaptionSrt) {
+        addToast('💬 Membakar subtitle ke video...', 'info');
+        const burnResult = await burnCaption(videoPath, currentCaptionSrt, activeAudio!.filename);
+        videoPath = burnResult.output_path;
+      }
+
+      const audioPath = activeAudio!.filename;
+      const renderRes = await renderVideo(videoPath, audioPath, w, h);
+      setRenderResult(renderRes);
+      dispatch({ type: 'SET_PIPELINE_STEP', step: 'done' });
+      
+      const outputName = renderRes.output_path.split('/').pop() || 'output.mp4';
+      const now = new Date().toISOString();
+      const latestScript = state.scriptHistory[0];
+      const caption = latestScript ? latestScript.caption : '';
+      const duration = latestScript && latestScript.duration ? latestScript.duration : '—';
+      
+      saveOutputToHistory({
+        name: outputName,
+        duration: duration,
+        size: '—',
+        caption,
+        created_at: now,
+      }).then(res => {
+        dispatch({
+          type: 'ADD_OUTPUT',
+          video: { id: res.id, name: outputName, duration: duration, size: res.size, caption, createdAt: now },
+        });
+      }).catch(() => {
+        dispatch({
+          type: 'ADD_OUTPUT',
+          video: { name: outputName, duration: duration, size: '—', caption, createdAt: now },
+        });
+      });
+      addToast('🎬 Render selesai! Cek di Output Videos', 'success');
+
+      // Reset
+      dispatch({ type: 'CLEAR_FILES' });
+      dispatch({ type: 'CLEAR_FILE_IDS' });
+      dispatch({ type: 'SET_ANALYSIS', results: [] });
+      dispatch({ type: 'SET_TRIM_SEGMENTS', segments: [] });
+      dispatch({ type: 'SET_CONCAT_PATH', path: null });
+      dispatch({ type: 'CLEAR_CAPTION' });
+      dispatch({ type: 'SET_UPLOADED_AUDIO', file: null });
+      dispatch({ type: 'SET_TTS_AUDIO', audio: null });
+      dispatch({ type: 'SET_LIBRARY_AUDIO', audio: null });
+      
+      savePipeline({ 
+        files: [], 
+        analysis_results: [], 
+        trim_segments: [], 
+        concat_path: null, 
+        caption_srt: null, 
+        caption_srt_path: null 
+      });
+      deleteAllFootage().catch(() => {});
+      
+    } catch (err: any) {
+      addToast(`❌ Gagal: ${err.message}`, 'error');
+      dispatch({ type: 'SET_PIPELINE_STEP', step: 'idle' });
+      setAnalyzing(false);
+      setGeneratingCaption(false);
+      setTrimming(false);
+      setConcating(false);
+      setRendering(false);
+    }
+    setRendering(false); // just in case
+  };
+
+  const isAutoProcessing = analyzing || generatingCaption || trimming || concating || rendering;
+  const currentProcessLabel = analyzing ? `Menganalisis... ${analyzeProgress.done}/${analyzeProgress.total}`
+    : generatingCaption ? 'Transcribing (Whisper)...'
+    : trimming ? 'Memotong footage...'
+    : concating ? 'Menggabungkan footage...'
+    : rendering ? 'Merender Final...'
+    : '🚀 1-Click Auto Process';
+
+  let overallProgress = 0;
+  if (isAutoProcessing) {
+    if (analyzing) {
+      overallProgress = 10 + (analyzeProgress.total > 0 ? (analyzeProgress.done / analyzeProgress.total) * 20 : 0);
+    } else if (generatingCaption) {
+      overallProgress = 45;
+    } else if (trimming) {
+      overallProgress = 65;
+    } else if (concating) {
+      overallProgress = 80;
+    } else if (rendering) {
+      overallProgress = 95;
+    }
+  }
 
   return (
     <div className="animate-fade-slide-in">
@@ -60,8 +249,6 @@ export default function EditorPage() {
         </p>
       </div>
 
-      {/* Stats */}
-      <VideoStats />
 
       {/* Upload + Script */}
       <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4 mb-4">
@@ -70,183 +257,79 @@ export default function EditorPage() {
       </div>
 
       {/* Progress */}
-      <ProgressPipeline />
+      <ProgressPipeline>
+        <div className="mt-5 border-t border-[var(--border)] pt-5">
+          {isAutoProcessing ? (
+            <div className="relative w-full h-14 rounded-xl overflow-hidden bg-[var(--bg-input)] border border-[var(--border)] shadow-inner">
+              {/* Progress Fill */}
+              <div 
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#6c5ce7] to-[#a855f7] transition-all duration-500 ease-out"
+                style={{ width: `${overallProgress}%` }}
+              />
+              {/* Animated Stripes/Glow on top of fill */}
+              <div 
+                className="absolute top-0 left-0 h-full w-full opacity-20 pointer-events-none"
+                style={{
+                  backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.25) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.25) 75%, transparent 75%, transparent)',
+                  backgroundSize: '24px 24px',
+                  animation: 'slide 1s linear infinite'
+                }} 
+              />
+              {/* Text */}
+              <div className="absolute inset-0 flex items-center justify-center font-bold text-white text-base drop-shadow-md z-10">
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 shrink-0" />
+                {currentProcessLabel} ({Math.round(overallProgress)}%)
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full text-base py-3 shadow-[0_0_20px_var(--accent-glow)] hover:shadow-[0_0_30px_var(--accent)] transition-all h-14"
+              disabled={state.uploadedFileIds.length === 0}
+              onClick={handleAutoProcess}
+            >
+              🚀 1-Click Auto Process
+            </Button>
+          )}
+
+          {renderResult && !isAutoProcessing && (
+            <div className="mt-4 flex gap-2 justify-center">
+              <Button
+                variant="outline"
+                size="md"
+                className="border-[var(--accent)] text-[var(--accent)]"
+                onClick={() => window.open(`${BACKEND_URL}${renderResult.output_url}`, '_blank')}
+              >
+                📥 Download Hasil Video
+              </Button>
+            </div>
+          )}
+        </div>
+      </ProgressPipeline>
 
       {/* Analysis Table */}
-      <AnalysisTable />
+      {(state.uploadedFiles.length > 0 || state.analysisResults.length > 0) && <AnalysisTable />}
 
-      {/* Action Bar */}
-      <div className="flex flex-wrap items-end gap-2 mt-1 sticky bottom-0 bg-[var(--bg-primary)] py-3 z-[5] max-md:flex-col">
-        <div>
-          <Button
-            variant="outline"
-            size="lg"
-            loading={analyzing}
-            disabled={state.uploadedFileIds.length === 0 || analyzing}
-            title="Cek kualitas footage (blur, shake, good segment)"
-          onClick={async () => {
-            if (state.uploadedFileIds.length === 0) {
-              addToast('⚠️ Upload footage terlebih dahulu', 'warning');
-              return;
-            }
-            if (state.uploadedFileIds.length < state.uploadedFiles.length) {
-              addToast('⚠️ Masih upload ke backend... tunggu selesai', 'warning');
-              return;
-            }
-            setAnalyzing(true);
-            setAnalyzeProgress({ done: 0, total: state.uploadedFileIds.length });
-            dispatch({ type: 'SET_PIPELINE_STEP', step: 'analyze' });
-
-            // Analisis per file — progress tracking
-            const allResults: any[] = [];
-            const batchSize = 3; // 3 file per request
-            const ids = [...state.uploadedFileIds];
-
-            try {
-              for (let i = 0; i < ids.length; i += batchSize) {
-                const batch = ids.slice(i, i + batchSize);
-                const results = await analyzeFootage(batch);
-                allResults.push(...results);
-                setAnalyzeProgress({ done: Math.min(i + batchSize, ids.length), total: ids.length });
-              }
-              dispatch({ type: 'SET_ANALYSIS', results: allResults });
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'analyze' });
-              savePipeline({ analysis_results: allResults });
-              addToast(`✅ Analisis selesai — ${allResults.length} footage`, 'success');
-            } catch (err: any) {
-              addToast(`❌ Gagal analisis: ${err.message}`, 'error');
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'idle' });
-            }
-            setAnalyzing(false);
-          }}
-        >
-          {analyzing
-            ? `🔍 Menganalisis... ${analyzeProgress.done}/${analyzeProgress.total}`
-            : `🔍 Analyze Footage${state.uploadedFileIds.length > 0 ? ` (${state.uploadedFileIds.length})` : ''}`
-          }
-          </Button>
-          <p className="text-[0.6rem] text-[var(--text-muted)] mt-0.5">Cek blur, shake, good segment</p>
+      {/* Audio Warning Modal */}
+      {showAudioWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-4 mx-auto">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-lg font-bold text-center mb-2 text-[var(--text-primary)]">Audio Belum Siap</h3>
+            <p className="text-sm text-[var(--text-secondary)] text-center mb-6 leading-relaxed">
+              Anda belum melakukan <strong>Generate TTS</strong> atau belum memilih audio dari <strong>Library</strong>. Sistem membutuhkan audio sebagai basis durasi video.
+            </p>
+            <div className="flex justify-center">
+              <Button variant="primary" block onClick={() => setShowAudioWarning(false)}>
+                Mengerti
+              </Button>
+            </div>
+          </div>
         </div>
-
-        <div>
-          <Button
-            variant="primary"
-            size="lg"
-            loading={trimming || concating}
-            disabled={state.analysisResults.length === 0 || !hasAudio || trimming || concating}
-            title={!state.analysisResults.length ? 'Butuh hasil Analyze dulu' : !hasAudio ? 'Butuh Generate TTS atau pilih audio dari library' : 'Potong footage sesuai durasi audio, lalu gabung jadi 1 video'}
-          onClick={async () => {
-            if (state.analysisResults.length === 0) {
-              addToast('⚠️ Analisis footage dulu', 'warning');
-              return;
-            }
-            if (!hasAudio) {
-              addToast('⚠️ Generate TTS atau pilih audio dari library', 'warning');
-              return;
-            }
-            const targetDur = state.ttsAudio?.duration || 60;
-            setTrimming(true);
-            dispatch({ type: 'SET_PIPELINE_STEP', step: 'trim' });
-            try {
-              const result = await trimFootage(state.analysisResults, targetDur);
-              dispatch({ type: 'SET_TRIM_SEGMENTS', segments: result.segments });
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'trim' });
-              savePipeline({ trim_segments: result.segments });
-              addToast(`✂️ Trim selesai — total ${result.total_duration}s dari target ${result.target_duration}s`, 'success');
-              // Auto-lanjut ke concat
-              setConcating(true);
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'concat' });
-              const concatResult = await concatFootage(result.segments, state.uploadedFileIds);
-              dispatch({ type: 'SET_CONCAT_PATH', path: concatResult.output_path });
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'concat' });
-              savePipeline({ concat_path: concatResult.output_path, trim_segments: result.segments });
-              addToast(`🔗 Concat selesai — durasi ${concatResult.duration}s`, 'success');
-            } catch (err: any) {
-              addToast(`❌ Gagal: ${err.message}`, 'error');
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'analyze' });
-            }
-            setTrimming(false);
-            setConcating(false);
-          }}
-        >
-          {trimming ? '✂️ Trimming...' : concating ? '🔗 Concating...' : '✂️ Trim + Concat'}
-          </Button>
-          <p className="text-[0.6rem] text-[var(--text-muted)] mt-0.5">
-            {!state.analysisResults.length ? '⏳ Butuh Analyze' : !hasAudio ? '⏳ Butuh TTS / Audio Library' : 'Potong + gabung footage'}
-          </p>
-        </div>
-
-        <div>
-          <Button
-            variant="success"
-            size="lg"
-          loading={rendering}
-          disabled={!state.concatPath || rendering}
-          title={!state.concatPath ? 'Butuh Trim + Concat dulu' : 'Gabung video + audio jadi final .mp4'}
-          onClick={async () => {
-            if (!state.concatPath) {
-              addToast('⚠️ Jalankan Trim + Concat dulu', 'warning');
-              return;
-            }
-            if (!activeAudio) {
-              addToast('⚠️ Generate TTS atau pilih audio dari library', 'warning');
-              return;
-            }
-            setRendering(true);
-            dispatch({ type: 'SET_PIPELINE_STEP', step: 'render' });
-            try {
-              const w = state.outputResolution === '720×1280' ? 720 : 1080;
-              const h = state.outputResolution === '720×1280' ? 1280 : 1920;
-              const audioPath = activeAudio.filename; // backend resolves from outputs/
-              const result = await renderVideo(state.concatPath, audioPath, w, h);
-              setRenderResult(result);
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'done' });
-              const outputName = result.output_path.split('/').pop() || 'output.mp4';
-              const now = new Date().toISOString();
-              dispatch({
-                type: 'ADD_OUTPUT',
-                video: { name: outputName, duration: '—', size: '—', createdAt: now },
-              });
-              // Simpan ke SQLite backend
-              saveOutputToHistory({
-                name: outputName,
-                duration: '—',
-                size: '—',
-                created_at: now,
-              }).catch(() => {});
-              addToast('🎬 Render selesai! Cek di Output Videos', 'success');
-            } catch (err: any) {
-              addToast(`❌ Render gagal: ${err.message}`, 'error');
-              dispatch({ type: 'SET_PIPELINE_STEP', step: 'concat' });
-            }
-            setRendering(false);
-          }}
-        >
-          {rendering ? '🎬 Merender...' : '🎬 Render Final'}
-          </Button>
-          <p className="text-[0.6rem] text-[var(--text-muted)] mt-0.5">
-            {!state.concatPath ? '⏳ Butuh Trim + Concat' : 'Gabung video + audio → final .mp4'}
-          </p>
-        </div>
-
-        <div>
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-[var(--accent)]! text-[var(--accent)]!"
-            disabled={!renderResult || rendering}
-            onClick={() => {
-              if (!renderResult) return;
-              window.open(`${BACKEND_URL}${renderResult.output_url}`, '_blank');
-            }}
-          >
-            📥 Download
-          </Button>
-          <p className="text-[0.6rem] text-[var(--text-muted)] mt-0.5">
-            {!renderResult ? '⏳ Butuh Render dulu' : 'Download hasil final'}
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

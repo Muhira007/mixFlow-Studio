@@ -14,15 +14,17 @@ interface NavItem { id: string; label: string; icon: string; path: string; badge
 export const NAV_ITEMS: NavItem[] = [
   { id: 'editor', label: 'Video Editor', icon: '🎞️', path: '/', badge: 'Main' },
   { id: 'script-gen', label: 'Script Generator', icon: '🤖', path: '/script-generator' },
+  { id: 'auto-caption', label: 'Auto Caption', icon: '💬', path: '/auto-caption' },
+  { id: 'auto-cover', label: 'Auto Cover', icon: '🖼️', path: '/auto-cover' },
   { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
-  { id: 'history', label: 'Output Videos', icon: '📁', path: '/outputs' },
+  { id: 'history', label: 'Hasil Render', icon: '📁', path: '/outputs' },
 ];
 
 export const PANEL_NAMES: Record<string, string> = {
   editor: 'Video Editor',
   'script-gen': 'Script Generator',
   settings: 'Settings',
-  history: 'Output Videos',
+  history: 'Hasil Render',
 };
 
 // AI Providers
@@ -88,6 +90,7 @@ export const CODECS = [
 export const PIPELINE_STEPS = [
   { id: 'upload', label: 'Upload', icon: '📤' },
   { id: 'tts', label: 'TTS', icon: '🔊' },
+  { id: 'caption', label: 'Caption', icon: '💬' },
   { id: 'analyze', label: 'Analyze', icon: '🔍' },
   { id: 'trim', label: 'Trim', icon: '✂️' },
   { id: 'concat', label: 'Concat', icon: '🔗' },

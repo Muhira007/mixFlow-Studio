@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ORIGINS, UPLOADS_DIR, OUTPUTS_DIR, PROXY_DIR
 from app.database import init_db
-from app.routers import tts, video, script, scraper, voices, sync, db_browser
+from app.routers import tts, video, script, scraper, voices, sync, db_browser, caption, cover
 
 
 @asynccontextmanager
@@ -49,6 +49,8 @@ app.include_router(scraper.router, prefix="/api/scrape", tags=["Scraper"])
 app.include_router(voices.router, prefix="/api/voices", tags=["Voices"])
 app.include_router(sync.router, prefix="/api/sync", tags=["Sync"])
 app.include_router(db_browser.router, prefix="/api/db", tags=["DB Browser"])
+app.include_router(caption.router, prefix="/api/caption", tags=["Caption"])
+app.include_router(cover.router, prefix="/api/cover", tags=["Cover"])
 
 
 # ---- Health Check ----

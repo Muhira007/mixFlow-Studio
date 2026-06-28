@@ -4,7 +4,7 @@
 # ============================================
 set -e
 
-PROJECT_DIR="/home/kangdemuh/tester/mixflow"
+PROJECT_DIR="/home/kangdemuh/aplikasi/mixflow"
 LOGS_DIR="$PROJECT_DIR/logs"
 
 # Load nvm + pastikan pakai Node.js & npm dari WSL (bukan dari Windows)

@@ -4,7 +4,7 @@
 # ============================================
 set -e
 
-LOGS_DIR="/home/kangdemuh/tester/mixflow/logs"
+LOGS_DIR="/home/kangdemuh/aplikasi/mixflow/logs"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

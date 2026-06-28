@@ -7,6 +7,7 @@ import { ACCEPTED_VIDEO_TYPES, ACCEPTED_VIDEO_EXTENSIONS, MAX_FILE_SIZE } from '
 import { Card } from '@/components/shared/Card';
 import { formatFileSize } from '@/lib/utils';
 import { BACKEND_URL } from '@/lib/constants';
+import { deleteAllFootage } from '@/lib/api';
 
 type SortMode = 'upload' | 'name' | 'size' | 'date';
 
@@ -25,6 +26,7 @@ export function UploadZone() {
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, { loaded: number; total: number; speed: number; done: boolean }>>({});
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -160,19 +162,27 @@ export function UploadZone() {
 
   return (
     <Card header="Upload Footage" icon="📤">
-      {/* Sort dropdown */}
-      {state.uploadedFiles.length > 1 && (
-        <div className="flex items-center gap-2 mb-2.5">
-          <span className="text-[0.65rem] text-[var(--text-muted)]">Urutkan:</span>
-          <select
-            className="text-[0.65rem] px-2 py-1 bg-[var(--bg-input)] border border-[var(--border)] rounded-md text-[var(--text-primary)] outline-none cursor-pointer"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortMode)}
+      {/* Controls: Sort and Clear All */}
+      {(state.uploadedFiles.length > 0 || state.uploadedFileIds.length > 0) && (
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[0.65rem] text-[var(--text-muted)]">Urutkan:</span>
+            <select
+              className="text-[0.65rem] px-2 py-1 bg-[var(--bg-input)] border border-[var(--border)] rounded-md text-[var(--text-primary)] outline-none cursor-pointer"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortMode)}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="text-[0.65rem] px-2 py-1 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)]/20 border border-[var(--danger)]/20 rounded-md transition-colors"
+            onClick={() => setShowClearConfirm(true)}
           >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            Hapus Semua
+          </button>
         </div>
       )}
 
@@ -324,6 +334,42 @@ export function UploadZone() {
         <p className="text-[var(--text-muted)] text-xs text-center py-3">
           Belum ada footage
         </p>
+      )}
+
+      {/* Custom Confirm Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl animate-fade-slide-in">
+            <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+              <span className="text-[var(--danger)]">⚠️</span> Hapus Semua Footage?
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
+              Tindakan ini akan menghapus semua footage yang ada di antrean project ini secara permanen. Anda yakin?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-sm rounded-xl hover:bg-[var(--bg-card)] transition-colors font-medium text-[var(--text-primary)]"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Batal
+              </button>
+              <button
+                className="px-4 py-2 text-sm rounded-xl bg-[var(--danger)] text-white font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                onClick={async () => {
+                  setShowClearConfirm(false);
+                  dispatch({ type: 'CLEAR_FILES' });
+                  dispatch({ type: 'CLEAR_FILE_IDS' });
+                  dispatch({ type: 'SET_ANALYSIS', results: [] });
+                  setThumbnails({});
+                  await deleteAllFootage().catch(() => {});
+                  addToast('🗑️ Semua footage dibersihkan', 'info');
+                }}
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Card>
   );

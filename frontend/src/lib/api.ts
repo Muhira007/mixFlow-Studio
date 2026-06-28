@@ -75,6 +75,18 @@ export async function deleteAllTTSAudio(): Promise<{ status: string; count: numb
   return request('/api/tts/all', { method: 'DELETE' });
 }
 
+export async function deleteTTSAudio(filename: string): Promise<{ status: string }> {
+  return request(`/api/tts/audio/${filename}`, { method: 'DELETE' });
+}
+
+export async function deleteAllFootage(): Promise<{ status: string }> {
+  return request('/api/video/files/all', { method: 'DELETE' });
+}
+
+export async function deleteAllOutputs(): Promise<{ status: string }> {
+  return request('/api/sync/output/all', { method: 'DELETE' });
+}
+
 export async function uploadAudioFile(file: File): Promise<{ filename: string; audio_url: string }> {
   const formData = new FormData();
   formData.append('file', file);
@@ -84,10 +96,22 @@ export async function uploadAudioFile(file: File): Promise<{ filename: string; a
   return res.json();
 }
 
-export async function generateTTS(text: string, voiceId: string, apiKey: string): Promise<{ audio_url: string; filename: string; duration: number; chunks: number }> {
+export async function generateTTS(
+  text: string,
+  voiceId: string,
+  apiKey: string,
+  stability = 0.55,
+  similarityBoost = 0.45,
+): Promise<{ audio_url: string; filename: string; duration: number; chunks: number }> {
   return request('/api/tts/generate', {
     method: 'POST',
-    body: JSON.stringify({ text, voice_id: voiceId, api_key: apiKey }),
+    body: JSON.stringify({
+      text,
+      voice_id: voiceId,
+      api_key: apiKey,
+      stability,
+      similarity_boost: similarityBoost,
+    }),
     timeout: 120000,
   });
 }
@@ -215,6 +239,7 @@ export type OutputRow = {
   name: string;
   duration: string;
   size: string;
+  caption?: string;
   created_at: string;
 };
 
@@ -260,13 +285,32 @@ export async function deleteScriptFromHistory(scriptId: string) {
 
 export async function saveOutputToHistory(output: {
   name: string;
-  duration: string;
-  size: string;
+  duration?: string;
+  size?: string;
+  caption?: string;
   created_at: string;
-}) {
+}): Promise<OutputRow> {
   return request('/api/sync/output', {
     method: 'POST',
     body: JSON.stringify(output),
+  });
+}
+
+export async function deleteOutputFromHistory(outputId: number) {
+  return request(`/api/sync/output/${outputId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function deleteCleanupConcat() {
+  return request('/api/sync/cleanup/concat', {
+    method: 'DELETE',
+  });
+}
+
+export async function deleteCleanupCaptioned() {
+  return request('/api/sync/cleanup/captioned', {
+    method: 'DELETE',
   });
 }
 
@@ -317,6 +361,45 @@ export function getVoiceSampleUrl(voiceId: string): string {
   return `${BACKEND_URL}/api/voices/${encodeURIComponent(voiceId)}/sample`;
 }
 
+export type CloneVoiceResult = {
+  status: string;
+  voice_id: string;
+  name: string;
+  requires_verification: boolean;
+  message: string;
+};
+
+export async function cloneVoice(
+  name: string,
+  files: File[],
+  options?: {
+    description?: string;
+    labels?: string;
+    removeBackgroundNoise?: boolean;
+    language?: string;
+    gender?: string;
+    label?: string;
+  }
+): Promise<CloneVoiceResult> {
+  const formData = new FormData();
+  formData.append('name', name);
+  files.forEach((f) => formData.append('files', f));
+  if (options?.description) formData.append('description', options.description);
+  if (options?.labels) formData.append('labels', options.labels);
+  if (options?.removeBackgroundNoise) formData.append('remove_background_noise', 'true');
+  if (options?.language) formData.append('language', options.language);
+  if (options?.gender) formData.append('gender', options.gender);
+  if (options?.label) formData.append('label', options.label);
+
+  const url = `${BACKEND_URL}/api/voices/clone`;
+  const res = await fetch(url, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: 'Voice clone gagal' }));
+    throw new ApiError(errBody.detail || 'Voice clone gagal', res.status);
+  }
+  return res.json();
+}
+
 // ---- Health Check ----
 
 export async function healthCheck() {
@@ -324,3 +407,94 @@ export async function healthCheck() {
 }
 
 export { ApiError };
+
+// ---- Caption Endpoints ----
+
+export type CaptionGenerateResult = {
+  srt: string;
+  text: string;
+  word_count: number;
+  chunk_count: number;
+  srt_path: string;
+};
+
+export type CaptionSettings = {
+  font: string;
+  size: number;
+  color: string;
+  outline_color: string;
+  outline_size: number;
+  position: number;
+  uppercase: boolean;
+  template: string;
+  social_max_words: number;
+  social_hashtags: number;
+  social_tone: string;
+};
+
+export async function generateCaption(
+  audioFilename: string,
+  apiKey: string,
+  capitalize = false
+): Promise<CaptionGenerateResult> {
+  return request('/api/caption/generate', {
+    method: 'POST',
+    body: JSON.stringify({
+      audio_filename: audioFilename,
+      api_key: apiKey,
+      capitalize,
+    }),
+    timeout: 120000,
+  });
+}
+
+export async function fetchCaptionSettings(): Promise<{ settings: CaptionSettings }> {
+  return request('/api/caption/settings');
+}
+
+export async function saveCaptionSettings(
+  updates: Partial<CaptionSettings>
+): Promise<{ settings: CaptionSettings }> {
+  return request('/api/caption/settings', {
+    method: 'POST',
+    body: JSON.stringify(updates),
+  });
+}
+
+export type CoverSettings = {
+  template: string;
+  bg_opacity: number;
+  title_style: string;
+  title_max_words: number;
+};
+
+export async function fetchCoverSettings(): Promise<{ settings: CoverSettings }> {
+  return request('/api/cover/settings');
+}
+
+export async function saveCoverSettings(
+  updates: Partial<CoverSettings>
+): Promise<{ settings: CoverSettings }> {
+  return request('/api/cover/settings', {
+    method: 'POST',
+    body: JSON.stringify(updates),
+  });
+}
+
+export async function burnCaption(
+  videoPath: string,
+  srtContent: string,
+  audioFilename?: string,
+  settings?: Partial<CaptionSettings>
+): Promise<{ output_path: string; output_url: string }> {
+  return request('/api/caption/burn', {
+    method: 'POST',
+    body: JSON.stringify({
+      video_path: videoPath,
+      srt_content: srtContent,
+      audio_filename: audioFilename,
+      settings,
+    }),
+    timeout: 300000,
+  });
+}

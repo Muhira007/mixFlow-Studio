@@ -68,6 +68,7 @@ def init_db():
             name TEXT NOT NULL,
             duration TEXT NOT NULL DEFAULT '',
             size TEXT NOT NULL DEFAULT '',
+            caption TEXT DEFAULT '',
             created_at TEXT NOT NULL
         );
 
@@ -85,6 +86,12 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pipeline_state (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
+        );
+
+        -- Caption Settings (auto-caption config)
+        CREATE TABLE IF NOT EXISTS caption_settings (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            settings_json TEXT NOT NULL DEFAULT '{}'
         );
     """)
     conn.commit()
@@ -229,9 +236,18 @@ def list_outputs(limit: int = 50) -> list[dict]:
 
 def add_output(video: dict) -> dict:
     conn = get_db()
+    
+    size_str = video.get("size", "")
+    if size_str in ("", "—"):
+        from app.config import OUTPUTS_DIR
+        filepath = OUTPUTS_DIR / video["name"]
+        if filepath.exists():
+            size_mb = filepath.stat().st_size / (1024 * 1024)
+            size_str = f"{size_mb:.1f} MB"
+
     cur = conn.execute(
-        "INSERT INTO output_history (name, duration, size, created_at) VALUES (?, ?, ?, ?)",
-        (video["name"], video.get("duration", ""), video.get("size", ""), video["created_at"]),
+        "INSERT INTO output_history (name, duration, size, caption, created_at) VALUES (?, ?, ?, ?, ?)",
+        (video["name"], video.get("duration", ""), size_str, video.get("caption", ""), video["created_at"]),
     )
     conn.commit()
     row = conn.execute("SELECT * FROM output_history WHERE id = ?", (cur.lastrowid,)).fetchone()
@@ -241,11 +257,28 @@ def add_output(video: dict) -> dict:
 
 def delete_output(output_id: int) -> bool:
     conn = get_db()
+    row = conn.execute("SELECT name FROM output_history WHERE id = ?", (output_id,)).fetchone()
+    if row:
+        import os
+        from app.config import OUTPUTS_DIR
+        filepath = OUTPUTS_DIR / row["name"]
+        if filepath.exists():
+            try:
+                filepath.unlink()
+            except Exception:
+                pass
     cur = conn.execute("DELETE FROM output_history WHERE id = ?", (output_id,))
     conn.commit()
     deleted = cur.rowcount > 0
     conn.close()
     return deleted
+
+
+def clear_output_history():
+    conn = get_db()
+    conn.execute("DELETE FROM output_history")
+    conn.commit()
+    conn.close()
 
 
 # ============================================

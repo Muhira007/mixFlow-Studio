@@ -1,7 +1,8 @@
 # 📊 Development Progress — mixFlow
 
 **Proyek dimulai:** 27 Juni 2026  
-**Status:** 🟢 Beta — Backend + Frontend Fungsional, Siap Digunakan
+**Last update:** 29 Juni 2026 — Auto Cover (Fase 9) complete  
+**Status:** 🟢 Beta — Backend + Frontend Fungsional, Auto Caption & Auto Cover Siap
 
 ---
 
@@ -70,27 +71,41 @@
 - [ ] Test edge cases
 - [ ] Dokumentasi video tutorial
 
-### 🔜 Auto Caption (Fase 8 — Next Priority)
+### Auto Caption (Fase 8 — ✅ Completed 28 Juni 2026)
 
-**Referensi:** Proyek vidflow (`/home/kangdemuh/aplikasi/vidflow`)
-
-- [ ] `backend/app/services/caption_service.py` — Whisper-1 STT, generate SRT (word-level, 5 kata per chunk, plain style)
-- [ ] `backend/app/routers/caption.py` — `POST /api/caption/generate`, `GET/POST /api/caption/settings`
-- [ ] FFmpeg `burn_subtitles_to_video()` — overlay SRT/ASS ke video
-- [ ] `frontend/src/components/editor/CaptionConfig.tsx` — UI: font, size, color, position, style
-- [ ] Update `ProgressPipeline.tsx` — tambah step "Caption" (7-step: Upload → TTS → Caption → Analyze → Trim → Concat → Render)
-- [ ] Update `constants.ts` — `PIPELINE_STEPS` tambah caption
-- [ ] Update `page.tsx` — button "Generate Caption" + simpan SRT ke state
-- [ ] DB table `caption_settings` untuk persist config
+- [x] `backend/app/services/caption_service.py` — Whisper-1 STT, generate SRT (word-level, 5 kata per chunk, plain style)
+- [x] `backend/app/routers/caption.py` — `POST /api/caption/generate`, `GET/POST /api/caption/settings`, `POST /api/caption/burn`
+- [x] FFmpeg `burn_subtitles_to_video()` — overlay SRT ke video
+- [x] `frontend/src/components/editor/CaptionConfig.tsx` — UI: font, size, color, outline, position, uppercase, preview
+- [x] Update `ProgressPipeline.tsx` — tambah step "Caption" (7-step: Upload → TTS → Caption → Analyze → Trim → Concat → Render) + SRT preview popup
+- [x] Update `constants.ts` — `PIPELINE_STEPS` tambah caption
+- [x] Update `page.tsx` — button "Generate Caption", auto-burn subtitle saat render, pipeline resume
+- [x] Update `AppContext.tsx` — caption state (captionSrt, captionSrtPath, captionText) + actions
+- [x] Update `api.ts` — `generateCaption()`, `fetchCaptionSettings()`, `saveCaptionSettings()`, `burnCaption()`
+- [x] DB table `caption_settings` untuk persist config
+- [x] Register caption router di `main.py` (`/api/caption`)
 
 **Arsitektur:**
 ```
 Audio TTS (.mp3) → Whisper-1 → SRT (teks + timestamp)
-                            → FFmpeg burn subtitle ke video
+                            → FFmpeg burn subtitle ke video (sebelum render)
                             → Plain style (teks putih, 5 kata/chunk)
 ```
 
-### Future (Fase 9+)
+### 🎤 Clone My Voice — ✅ Completed 28 Juni 2026
+
+- [x] `POST /api/voices/clone` — ElevenLabs IVC API integration (upload sample → clone → auto-save)
+- [x] `tts_service.clone_voice_elevenlabs()` — multipart/form-data, error handling, max 25 files @10MB
+- [x] `CloneVoice.tsx` — UI drag-drop upload, tips rekaman, progress, auto-add ke Voice Manager
+
+### 🖼️ Auto Cover (Fase 9 — ✅ Completed 29 Juni 2026)
+
+- [x] `backend/app/services/cover_gen.py` — OpenCV frame extraction (SceneDetect) + Pillow image overlay
+- [x] `backend/app/routers/cover.py` — API routes untuk konfigurasi auto cover
+- [x] Auto Typography — perhitungan font otomatis untuk text wrap multiline
+- [x] `frontend/src/app/auto-cover/page.tsx` — UI untuk custom template cover, posisi judul, teks, dan opacity
+
+### Future (Fase 10+)
 - [ ] Background music
 - [ ] Batch processing
 - [ ] Preview real-time sebelum render

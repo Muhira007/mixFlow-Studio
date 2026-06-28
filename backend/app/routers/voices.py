@@ -10,11 +10,13 @@ GET    /api/voices/{id}/sample  — Download audio sample
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from typing import Optional
 
 from app.database import list_voices, add_voice, delete_voice
+from app.services.tts_service import clone_voice_elevenlabs
 
 router = APIRouter()
 
@@ -82,6 +84,116 @@ async def create_voice(voice: VoiceCreate):
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Voice Cloning (Instant Voice Clone via ElevenLabs) ──
+# Registered BEFORE /{voice_id} routes to avoid path conflicts
+
+@router.post("/clone", status_code=201)
+async def clone_voice(
+    name: str = Form(..., description="Nama untuk suara hasil clone"),
+    files: list[UploadFile] = File(..., description="File audio sample suara (min 1, max 25)"),
+    description: Optional[str] = Form(default="", description="Deskripsi opsional"),
+    labels: Optional[str] = Form(default="", description='Label JSON, misal: {"language":"id","accent":"jakarta"}'),
+    remove_background_noise: bool = Form(default=False, description="Bersihkan background noise"),
+    language: str = Form(default="Indonesia", description="Bahasa untuk disimpan ke DB"),
+    gender: str = Form(default="Neutral", description="Gender untuk disimpan ke DB"),
+    label: str = Form(default="My Voice", description="Label use case untuk disimpan ke DB"),
+):
+    """
+    Clone suara via ElevenLabs Instant Voice Clone (IVC).
+    Upload sample audio suara kamu, dapatkan voice_id, dan otomatis tersimpan di Voice Manager.
+    """
+    from app.database import get_db
+
+    # Read API key from database
+    db = get_db()
+    api_key_row = db.execute(
+        "SELECT value FROM api_keys WHERE provider = 'elevenlabs'"
+    ).fetchone()
+    db.close()
+
+    api_key = api_key_row["value"] if api_key_row else ""
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="ElevenLabs API Key belum diisi. Isi di halaman Settings terlebih dahulu.",
+        )
+
+    # Validate files
+    if not files:
+        raise HTTPException(status_code=400, detail="Minimal 1 file audio sample diperlukan")
+    if len(files) > 25:
+        raise HTTPException(status_code=400, detail="Maksimal 25 file audio sample")
+
+    # Validate file types
+    valid_exts = {".mp3", ".wav", ".ogg", ".m4a", ".webm", ".mp4", ".aac", ".flac"}
+    for f in files:
+        if not f.filename:
+            raise HTTPException(status_code=400, detail="Semua file harus punya nama")
+        ext = Path(f.filename).suffix.lower()
+        if ext not in valid_exts:
+            raise HTTPException(status_code=400, detail=f"Format tidak didukung: {ext}")
+
+    # Read file contents
+    file_bytes_list = []
+    filenames = []
+    try:
+        for f in files:
+            content = await f.read()
+            if len(content) == 0:
+                raise HTTPException(status_code=400, detail=f"File kosong: {f.filename}")
+            if len(content) > 10 * 1024 * 1024:  # 10 MB per file
+                raise HTTPException(status_code=400, detail=f"File terlalu besar (max 10MB): {f.filename}")
+            file_bytes_list.append(content)
+            filenames.append(f.filename)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal membaca file: {str(e)}")
+
+    # Call ElevenLabs IVC API
+    try:
+        result = await clone_voice_elevenlabs(
+            api_key=api_key,
+            name=name.strip(),
+            files=file_bytes_list,
+            filenames=filenames,
+            description=description,
+            labels=labels,
+            remove_background_noise=remove_background_noise,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Voice cloning gagal: {str(e)}")
+
+    voice_id = result["voice_id"]
+    if not voice_id:
+        raise HTTPException(status_code=502, detail="ElevenLabs tidak mengembalikan voice_id")
+
+    # Auto-save to Voice Manager
+    try:
+        saved = add_voice(
+            name=name.strip(),
+            voice_id=voice_id,
+            language=language,
+            gender=gender,
+            label=label,
+        )
+    except ValueError as e:
+        # Voice already exists — just return the ID
+        pass
+
+    return {
+        "status": "cloned",
+        "voice_id": voice_id,
+        "name": name.strip(),
+        "requires_verification": result.get("requires_verification", False),
+        "message": f"Suara '{name.strip()}' berhasil di-clone! Voice ID: {voice_id}",
+    }
 
 
 # ── Audio Sample Upload/Download (registered BEFORE /{voice_id} routes) ──

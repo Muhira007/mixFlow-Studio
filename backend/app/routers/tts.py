@@ -23,6 +23,8 @@ class TTSGenerateRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=15000, description="Naskah untuk TTS")
     api_key: str = Field(..., description="Eleven Labs API Key")
     voice_id: str = Field(default="21m00Tcm4TlvDq8ikWAM", description="Eleven Labs Voice ID")
+    stability: float = Field(default=0.55, ge=0.0, le=1.0, description="Stabilitas suara (0-1). Makin tinggi = makin monoton.")
+    similarity_boost: float = Field(default=0.45, ge=0.0, le=1.0, description="Kemiripan ke sample asli (0-1). Rendah = aksen berkurang.")
 
 
 class TTSGenerateResponse(BaseModel):
@@ -47,6 +49,7 @@ async def generate_tts(req: TTSGenerateRequest):
     try:
         audio_path, duration = await text_to_speech(
             text=req.text, api_key=req.api_key, voice_id=req.voice_id,
+            stability=req.stability, similarity_boost=req.similarity_boost,
         )
         from app.services.tts_service import chunk_text
         chunks = len(chunk_text(req.text))
@@ -108,6 +111,15 @@ async def delete_all_audio():
             f.unlink()
             deleted += 1
     return {"status": "deleted", "count": deleted}
+
+@router.delete("/audio/{filename}")
+async def delete_single_audio(filename: str):
+    """Delete a single TTS audio file."""
+    filepath = OUTPUTS_DIR / filename
+    if not filepath.exists() or not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404, detail="Audio tidak ditemukan")
+    filepath.unlink()
+    return {"status": "deleted", "filename": filename}
 
 
 @router.get("/audio/{filename}")

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { listTTSFiles, BACKEND_URL, type AudioFileInfo } from '@/lib/api';
+import { listTTSFiles, deleteTTSAudio, BACKEND_URL, type AudioFileInfo } from '@/lib/api';
 import { Button } from '@/components/shared/Button';
+import { X } from 'lucide-react';
 
 type Props = {
   selectedUrl: string | null;
@@ -16,11 +17,32 @@ export function AudioLibrary({ selectedUrl, onSelect }: Props) {
   const [playing, setPlaying] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
+  const fetchFiles = () => {
     listTTSFiles()
       .then((data) => { setFiles(data.files); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
+  };
+
+  useEffect(() => {
+    fetchFiles();
   }, []);
+
+  // Expose fetchFiles via an event or use an imperative handle if needed. 
+  // For now, if the parent deletes all, we can just trigger a custom event or let the parent force a re-render.
+  useEffect(() => {
+    const handleRefresh = () => fetchFiles();
+    window.addEventListener('refreshAudioLibrary', handleRefresh);
+    return () => window.removeEventListener('refreshAudioLibrary', handleRefresh);
+  }, []);
+
+  const handleDelete = async (filename: string) => {
+    try {
+      await deleteTTSAudio(filename);
+      setFiles((prev) => prev.filter(f => f.filename !== filename));
+    } catch (e) {
+      console.error('Failed to delete audio', e);
+    }
+  };
 
   const playPause = (filename: string) => {
     if (playing === filename) {
@@ -90,6 +112,13 @@ export function AudioLibrary({ selectedUrl, onSelect }: Props) {
             >
               {isSelected ? '✓ Dipilih' : 'Pakai'}
             </Button>
+            <button
+              onClick={() => handleDelete(f.filename)}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 shrink-0 transition-colors"
+              title="Hapus"
+            >
+              <X size={14} />
+            </button>
           </div>
         );
       })}

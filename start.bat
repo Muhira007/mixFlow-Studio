@@ -17,7 +17,7 @@ echo.
 echo ============================================
 echo.
 
-wsl -d Ubuntu-26.04 --cd "/home/kangdemuh/tester/mixflow" bash -c "./start-all.sh"
+wsl -d Ubuntu-26.04 --cd "/home/kangdemuh/aplikasi/mixflow" bash -c "./start-all.sh"
 
 echo.
 echo ============================================

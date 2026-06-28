@@ -254,6 +254,53 @@ async def render_video(req: RenderRequest):
         raise HTTPException(status_code=404, detail="Video tidak ditemukan")
     if not audio_path.exists():
         raise HTTPException(status_code=404, detail=f"Audio tidak ditemukan: {audio_path}")
+        
+    cover_image_path = None
+    try:
+        from app.routers.cover import get_cover_settings
+        from app.services.cover_gen import extract_representative_frame, generate_cover_image
+        from app.services.caption_rewriter import generate_cover_title
+        
+        cover_cfg = get_cover_settings()
+        template = cover_cfg.get("template", "none")
+        if template != "none":
+            # Generate cover
+            import tempfile
+            base_frame_path = tempfile.mktemp(suffix=".jpg", dir=str(OUTPUTS_DIR))
+            final_cover_path = tempfile.mktemp(suffix=".jpg", dir=str(OUTPUTS_DIR))
+            
+            # Read SRT for title generation
+            srt_path = OUTPUTS_DIR / f"{audio_path.stem}.srt"
+            srt_content = ""
+            if srt_path.exists():
+                with open(srt_path, "r", encoding="utf-8") as f:
+                    srt_content = f.read()
+                    
+            title_max_words = cover_cfg.get("title_max_words", 5)
+            title_style = cover_cfg.get("title_style", "casual")
+            
+            try:
+                cover_title = generate_cover_title(
+                    srt_content=srt_content,
+                    max_words=title_max_words,
+                    style=title_style
+                )
+            except Exception as e:
+                print(f"Failed to generate cover title: {e}")
+                cover_title = "AUTO VIDEO"
+                
+            extract_representative_frame(str(video_path), base_frame_path)
+            generate_cover_image(
+                base_image_path=base_frame_path,
+                output_path=final_cover_path,
+                title=cover_title if cover_title else "AUTO VIDEO",
+                template=template,
+                title_position="Tengah Besar",
+                bg_opacity=cover_cfg.get("bg_opacity", 0)
+            )
+            cover_image_path = Path(final_cover_path)
+    except Exception as e:
+        print(f"Error generating cover: {e}")
 
     try:
         output = render_final(
@@ -261,6 +308,7 @@ async def render_video(req: RenderRequest):
             audio_path=audio_path,
             output_width=req.output_width,
             output_height=req.output_height,
+            cover_image_path=cover_image_path,
         )
         return RenderResponse(
             output_path=str(output),
@@ -268,6 +316,18 @@ async def render_video(req: RenderRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Cleanup temp cover images if any
+        if cover_image_path and cover_image_path.exists():
+            try:
+                cover_image_path.unlink()
+            except:
+                pass
+        try:
+            if 'base_frame_path' in locals() and Path(base_frame_path).exists():
+                Path(base_frame_path).unlink()
+        except:
+            pass
 
 
 @router.get("/download/{filename}")
@@ -313,3 +373,21 @@ async def reset_pipeline():
     clear_pipeline_state()
     clear_file_records()
     return {"status": "cleared"}
+
+
+@router.delete("/files/all")
+async def clear_all_footage():
+    clear_file_records()
+    from app.config import PROXY_DIR
+    count = 0
+    if UPLOADS_DIR.exists():
+        for f in UPLOADS_DIR.glob("*"):
+            if f.is_file():
+                f.unlink()
+                count += 1
+    if PROXY_DIR.exists():
+        for f in PROXY_DIR.glob("*"):
+            if f.is_file():
+                f.unlink()
+                count += 1
+    return {"status": "cleared", "count": count}

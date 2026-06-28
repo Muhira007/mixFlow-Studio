@@ -8,7 +8,7 @@ import { fetchAllState, type SyncState } from '@/lib/api';
 // Types
 // ============================================
 
-type PipelineStep = 'idle' | 'upload' | 'tts' | 'analyze' | 'trim' | 'concat' | 'render' | 'done';
+type PipelineStep = 'idle' | 'upload' | 'tts' | 'caption' | 'analyze' | 'trim' | 'concat' | 'render' | 'done';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -37,9 +37,11 @@ type AnalysisResult = {
 };
 
 type OutputVideo = {
+  id?: number;
   name: string;
   duration: string;
   size: string;
+  caption?: string;
   createdAt: string;
 };
 
@@ -75,6 +77,8 @@ export type AppState = {
     minKeepDuration: number;
     outputFormat: string;
     videoCodec: string;
+    ttsStability: number;
+    ttsSimilarityBoost: number;
   };
   uploadedFiles: File[];
   uploadedFileMeta: FileMeta[];
@@ -91,6 +95,9 @@ export type AppState = {
   selectedVoice: string;
   outputResolution: '1080×1920' | '720×1280';
   pipelineStep: PipelineStep;
+  captionSrt: string | null;
+  captionSrtPath: string | null;
+  captionText: string | null;  // Plain text transcript
   analysisResults: AnalysisResult[];
   outputHistory: OutputVideo[];
   scriptHistory: GeneratedScript[];
@@ -121,6 +128,8 @@ type Action =
   | { type: 'LOAD_VOICES'; voices: TtsVoice[] }
   | { type: 'SET_OUTPUT_RESOLUTION'; resolution: '1080×1920' | '720×1280' }
   | { type: 'SET_PIPELINE_STEP'; step: PipelineStep }
+  | { type: 'SET_CAPTION_SRT'; srt: string | null; srtPath: string | null; text: string | null }
+  | { type: 'CLEAR_CAPTION' }
   | { type: 'ADD_FILE_IDS'; ids: string[] }
   | { type: 'CLEAR_FILE_IDS' }
   | { type: 'SET_ANALYSIS'; results: AnalysisResult[] }
@@ -152,6 +161,8 @@ const initialState: AppState = {
     minKeepDuration: 3.0,
     outputFormat: '9:16',
     videoCodec: 'h264',
+    ttsStability: 0.55,
+    ttsSimilarityBoost: 0.45,
   },
   uploadedFiles: [],
   uploadedFileMeta: [],
@@ -168,6 +179,9 @@ const initialState: AppState = {
   selectedVoice: '21m00Tcm4TlvDq8ikWAM',
   outputResolution: '1080×1920',
   pipelineStep: 'idle',
+  captionSrt: null,
+  captionSrtPath: null,
+  captionText: null,
   analysisResults: [],
   outputHistory: [],
   scriptHistory: [],
@@ -281,8 +295,20 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_PIPELINE_STEP':
       return { ...state, pipelineStep: action.step };
 
+    case 'SET_CAPTION_SRT':
+      return {
+        ...state,
+        captionSrt: action.srt,
+        captionSrtPath: action.srtPath,
+        captionText: action.text,
+        pipelineStep: action.srt ? 'caption' : state.pipelineStep,
+      };
+
+    case 'CLEAR_CAPTION':
+      return { ...state, captionSrt: null, captionSrtPath: null, captionText: null };
+
     case 'ADD_FILE_IDS':
-      return { ...state, uploadedFileIds: [...state.uploadedFileIds, ...action.ids] };
+      return { ...state, uploadedFileIds: Array.from(new Set([...state.uploadedFileIds, ...action.ids])) };
 
     case 'CLEAR_FILE_IDS':
       return { ...state, uploadedFileIds: [] };
@@ -377,6 +403,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             minKeepDuration: parseFloat(remote.settings.minKeepDuration || String(initialState.settings.minKeepDuration)),
             outputFormat: remote.settings.outputFormat || initialState.settings.outputFormat,
             videoCodec: remote.settings.videoCodec || initialState.settings.videoCodec,
+            ttsStability: parseFloat(remote.settings.ttsStability || String(initialState.settings.ttsStability)),
+            ttsSimilarityBoost: parseFloat(remote.settings.ttsSimilarityBoost || String(initialState.settings.ttsSimilarityBoost)),
           };
         }
 
@@ -394,12 +422,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         loaded.scriptHistory = (remote.scriptHistory || []).map((s: any) => ({
           id: s.id, script: s.script, caption: s.caption,
-          productName: s.product_name, style: s.style,
+        productName: s.product_name, style: s.style,
           duration: s.duration, audience: s.audience, createdAt: s.created_at,
         }));
 
         loaded.outputHistory = (remote.outputHistory || []).map((o: any) => ({
-          name: o.name, duration: o.duration, size: o.size, createdAt: o.created_at,
+          id: o.id,
+          name: o.name,
+          duration: o.duration,
+          size: o.size,
+          caption: o.caption,
+          createdAt: o.created_at,
         }));
 
         // Transient UI-only state from localStorage

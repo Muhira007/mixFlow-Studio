@@ -34,10 +34,12 @@
 | **🤖 Script Generator** | Generate naskah voice-over pakai AI (DeepSeek, Gemini, OpenAI). 16 gaya bahasa + multi-durasi. |
 | **🔊 TTS Engine** | Text-to-Speech via ElevenLabs. Multi-voice management. Audio library + preview. |
 | **🎞️ Video Editor** | Upload footage, auto-analyze, adaptive trim, concat, render ke 9:16 vertical. |
-| **🎙️ Voice Manager** | Kelola banyak suara TTS (nama, Voice ID, bahasa, gender, label). Upload sample audio. |
-| **💾 SQLite Storage** | Semua data (API keys, voices, settings, riwayat) tersimpan persistent di database lokal. |
-| **📜 Riwayat Naskah** | Setiap naskah yang digenerate otomatis tersimpan. Bisa dipakai ulang kapan saja. |
-| **⚙️ Settings** | Kelola API keys, voices, aturan konten, danger zone (reset/hapus). |
+| **💬 Auto Caption** | Subtitle otomatis menggunakan Whisper STT dengan kustomisasi font/style. |
+| **🖼️ Auto Cover** | Pembuatan thumbnail otomatis dengan ekstraksi frame OpenCV dan desain template teks (Pillow). |
+| **🎙️ Voice Manager** | Kelola suara TTS. Fitur **Clone Voice** ElevenLabs langsung dari UI. Upload sample audio. |
+| **💾 SQLite Storage** | Semua data (API keys, voices, settings, riwayat) tersimpan persisten di database lokal. |
+| **📜 Riwayat Naskah** | Naskah yang digenerate tersimpan otomatis dan bisa digunakan ulang kapan saja. |
+| **⚙️ Settings** | Kelola API keys, suara, aturan konten. |
 
 ---
 
@@ -89,14 +91,18 @@ mixflow/
 │   │   │   ├── script.py        # AI script generator
 │   │   │   ├── scraper.py       # Product URL scraper
 │   │   │   ├── video.py         # Video analysis + render
-│   │   │   ├── voices.py        # Voice CRUD + audio samples
+│   │   │   ├── voices.py        # Voice CRUD + audio samples + clone
+│   │   │   ├── caption.py       # Auto caption (Whisper STT)
+│   │   │   ├── cover.py         # Auto cover settings
 │   │   │   ├── sync.py          # Global state sync endpoint
 │   │   │   └── db_browser.py    # Live DB viewer (HTML)
 │   │   └── services/
 │   │       ├── tts_service.py   # ElevenLabs TTS logic
 │   │       ├── script_service.py # AI prompt + API calls
 │   │       ├── scraper_service.py
-│   │       └── video_service.py
+│   │       ├── video_service.py
+│   │       ├── caption_service.py # Whisper STT & SRT generation
+│   │       └── cover_gen.py     # OpenCV & Pillow cover generation
 │   ├── data/
 │   │   ├── mixflow.db           # SQLite database
 │   │   └── samples/             # Voice audio samples
@@ -209,9 +215,10 @@ flowchart TD
     V1 --> V2[✍️ Tulis/Paste Naskah]
     V2 --> V3[🔊 Generate TTS]
     V3 --> V4[▶ Preview Audio]
-    V4 --> V5[🔍 Analyze + Trim]
-    V5 --> V6[🎬 Render Final]
-    V6 --> D[📥 Download .mp4]
+    V4 --> V4_1[💬 Auto Caption]
+    V4_1 --> V5[🔍 Analyze + Trim]
+    V5 --> V6[🎬 Render Final & Auto Cover]
+    V6 --> D[📥 Download .mp4 / .jpg]
 ```
 
 ### 1. Settings — Isi API Key
@@ -311,9 +318,9 @@ Buka `http://localhost:3000/`:
 └─────────────────────────────────────────────────────┘
 
 ┌─ 🔄 Progress Pipeline ─────────────────────────────┐
-│  ✓        ✓        ▶        🔍       ✂️       🔗   │
-│ Upload   TTS    Preview  Analyze   Trim   Concat   │
-│                  (klik!)                            │
+│  ✓        ✓        ✓        ▶        🔍       ✂️       🔗   │
+│ Upload   TTS    Caption  Preview  Analyze   Trim   Concat   │
+│                           (klik!)                            │
 └─────────────────────────────────────────────────────┘
 ```
 
