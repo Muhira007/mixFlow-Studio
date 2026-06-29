@@ -61,11 +61,11 @@ export default function AutoCoverPage() {
   }
 
   return (
-    <div className="p-6 max-w-[1100px] w-full mx-auto space-y-6 pb-20">
-      <div className="flex justify-between items-start">
+    <div className="animate-fade-slide-in space-y-6">
+      <div className="flex justify-between items-start mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Auto Cover Configuration</h1>
-          <p className="text-sm text-[var(--text-muted)]">Pilih template cover & pengaturan AI untuk generate cover otomatis.</p>
+          <h1 className="text-[1.4rem] font-bold mb-0.5 leading-tight">Auto Cover Configuration</h1>
+          <p className="text-[var(--text-secondary)] text-sm leading-relaxed">Pilih template cover & pengaturan AI untuk generate cover otomatis.</p>
         </div>
         <button 
           onClick={save} 

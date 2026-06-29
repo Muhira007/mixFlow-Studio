@@ -99,15 +99,15 @@ export function CaptionConfig() {
           </label>
           <input
             type="range"
-            min="12"
-            max="48"
+            min="5"
+            max="28"
             value={settings.size}
             onChange={(e) => save({ size: parseInt(e.target.value) })}
             className="w-full accent-[var(--accent)]"
           />
           <div className="flex justify-between text-[0.6rem] text-[var(--text-muted)]">
-            <span>12px</span>
-            <span>48px</span>
+            <span>5px</span>
+            <span>28px</span>
           </div>
         </div>
 

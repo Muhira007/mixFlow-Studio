@@ -3,7 +3,7 @@
 // ============================================
 
 export const APP_NAME = 'mixFlow';
-export const APP_VERSION = '1.0.0-beta';
+export const APP_VERSION = '1.0.0';
 export const APP_DESC = 'AI Video Editor for Content Creator Affiliate';
 
 export const STORAGE_KEY = 'mixflow_state_v1';
@@ -17,6 +17,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'auto-caption', label: 'Auto Caption', icon: '💬', path: '/auto-caption' },
   { id: 'auto-cover', label: 'Auto Cover', icon: '🖼️', path: '/auto-cover' },
   { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
+  { id: 'queue', label: 'Antrean Render', icon: '⏳', path: '/queue', badge: 'New' },
   { id: 'history', label: 'Hasil Render', icon: '📁', path: '/outputs' },
   { id: 'about', label: 'Tentang Aplikasi', icon: 'ℹ️', path: '/about' },
 ];
@@ -25,8 +26,11 @@ export const PANEL_NAMES: Record<string, string> = {
   editor: 'Video Editor',
   'script-gen': 'Script Generator',
   settings: 'Settings',
+  queue: 'Antrean Render',
   history: 'Hasil Render',
   about: 'Tentang Aplikasi',
+  'auto-caption': 'Auto Caption',
+  'auto-cover': 'Auto Cover',
 };
 
 // AI Providers

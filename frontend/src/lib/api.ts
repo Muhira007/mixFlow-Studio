@@ -221,6 +221,7 @@ export type SyncState = {
   ttsVoices: VoiceRow[];
   scriptHistory: ScriptRow[];
   outputHistory: OutputRow[];
+  pipelineState?: Record<string, any>;
 };
 
 export type ScriptRow = {

@@ -1,8 +1,8 @@
 # 📊 Development Progress — mixFlow
 
 **Proyek dimulai:** 27 Juni 2026  
-**Last update:** 29 Juni 2026 — Auto Cover (Fase 9) complete  
-**Status:** 🟢 Beta — Backend + Frontend Fungsional, Auto Caption & Auto Cover Siap
+**Last update:** 29 Juni 2026 — Release v1.0.0 (Antrean Render & Bulk Process)
+**Status:** 🟢 Stable v1.0.0 — Backend + Frontend Fungsional, Auto Caption & Auto Cover, Render Queue Siap
 
 ---
 
@@ -24,7 +24,8 @@
 - [x] Pipeline state persistence (save/resume after refresh)
 
 ### Frontend (Next.js 16)
-- [x] 4 halaman: Video Editor, Script Generator, Settings, Outputs
+- [x] 5 halaman: Video Editor, Script Generator, Settings, Queue, Outputs
+- [x] Fitur Antrean Render (Bulk Rendering) + Checklist + Hapus massal
 - [x] 20+ React components (shared, editor, script-gen, settings)
 - [x] Video Editor: UploadZone (drag-drop, sort, thumbnail, XHR progress per file)
 - [x] ScriptTextarea: TTS generation real API, Audio Library picker
@@ -106,8 +107,8 @@ Audio TTS (.mp3) → Whisper-1 → SRT (teks + timestamp)
 - [x] `frontend/src/app/auto-cover/page.tsx` — UI untuk custom template cover, posisi judul, teks, dan opacity
 
 ### Future (Fase 10+)
+- [x] Batch processing (Antrean Render / Bulk Render) — ✅ Completed 29 Juni 2026
 - [ ] Background music
-- [ ] Batch processing
 - [ ] Preview real-time sebelum render
 - [ ] Karaoke caption style (kata aktif kuning)
 

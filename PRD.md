@@ -42,7 +42,8 @@ Menggabungkan footage video, voice-over TTS, dan caption menjadi satu video vert
 | **Sumber Naskah** | Dari teks tertulis atau dari audio (upload / history TTS) |
 | **TTS Generation** | ElevenLabs API — generate dari teks, preview audio di pipeline |
 | **Audio Library** | List file audio terbaru, preview play, pilih untuk render |
-| **Progress Pipeline** | 7-step: Upload → TTS → Caption → Analyze → Trim → Concat → Render |
+| **Progress Pipeline** | Upload → TTS → Caption → Tambah ke Antrean |
+| **Antrean Render (Queue)** | Halaman khusus untuk render massal (Bulk Render) secara background |
 | **Output Resolusi** | 1080×1920 (Full HD) atau 720×1280 (HD) — H.264 |
 
 ### C. Auto Caption
@@ -101,9 +102,10 @@ flowchart TD
     V1 --> V2[Tulis/Paste Naskah]
     V2 --> V3[Generate TTS]
     V3 --> V4{Preview OK?}
-    V4 -- Ya --> V5[Analyze + Trim + Render]
+    V4 -- Ya --> V5[Tambah ke Antrean]
     V4 -- Tidak --> V3
-    V5 --> D[📥 Download .mp4]
+    V5 --> V6[▶️ Bulk Render di Queue]
+    V6 --> D[📥 Download .mp4]
 ```
 
 ### 3.2 Flow Script Generator
@@ -229,7 +231,7 @@ Semua state workflow video disimpan di SQLite — user bisa **resume** setelah r
 ```
 mixflow/
 ├── frontend/          # Next.js 16 App Router
-│   ├── src/app/       # 4 halaman (editor, script-gen, settings, outputs)
+│   ├── src/app/       # 5 halaman (editor, script-gen, settings, queue, outputs)
 │   ├── src/components/ # 22+ React components
 │   ├── src/contexts/  # AppContext (useReducer + SQLite sync)
 │   └── src/lib/       # API client, constants, utils

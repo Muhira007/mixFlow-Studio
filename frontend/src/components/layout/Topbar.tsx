@@ -12,8 +12,12 @@ export function Topbar() {
   function pathnameToPanel(path: string): string {
     if (path === '/') return 'editor';
     if (path.startsWith('/script-generator')) return 'script-gen';
+    if (path.startsWith('/auto-caption')) return 'auto-caption';
+    if (path.startsWith('/auto-cover')) return 'auto-cover';
+    if (path.startsWith('/queue')) return 'queue';
     if (path.startsWith('/settings')) return 'settings';
     if (path.startsWith('/outputs')) return 'history';
+    if (path.startsWith('/about')) return 'about';
     return 'editor';
   }
 
@@ -64,7 +68,7 @@ export function Topbar() {
         <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity pl-1">
           <div className="hidden sm:block text-right">
             <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight">MixFlow User</p>
-            <p className="text-[0.6rem] text-[var(--text-muted)] font-medium">v1.0-beta</p>
+            <p className="text-[0.6rem] text-[var(--text-muted)] font-medium">v1.0.0</p>
           </div>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-600 flex items-center justify-center text-white text-[0.65rem] font-bold shadow-lg shadow-[var(--accent)]/20 ring-2 ring-[var(--bg-primary)] ring-offset-1 ring-offset-[var(--border)]">
             MF

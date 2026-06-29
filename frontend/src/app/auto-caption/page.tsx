@@ -77,10 +77,10 @@ export default function AutoCaptionPage() {
   }
 
   return (
-    <div className="p-6 max-w-[900px] w-full mx-auto space-y-6 pb-20">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Auto Caption Configuration</h1>
-        <p className="text-sm text-[var(--text-muted)]">Atur gaya tampilan subtitle/caption otomatis untuk video Anda.</p>
+    <div className="animate-fade-slide-in space-y-6">
+      <div className="mb-5">
+        <h1 className="text-[1.4rem] font-bold mb-0.5 leading-tight">Auto Caption Configuration</h1>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">Atur gaya tampilan subtitle/caption otomatis untuk video Anda.</p>
       </div>
 
       <div>
@@ -134,8 +134,8 @@ export default function AutoCaptionPage() {
                 </label>
                 <input
                   type="range"
-                  min="12"
-                  max="48"
+                  min="5"
+                  max="28"
                   value={settings.size}
                   onChange={(e) => update({ size: parseInt(e.target.value) })}
                   className="w-full accent-[var(--accent)]"

@@ -56,7 +56,7 @@ export default function EditorPage() {
     savePipelineState(extra).catch(() => {});
   };
 
-  const handleAutoProcess = async () => {
+  const handleAddToQueue = async () => {
     if (state.uploadedFileIds.length === 0) {
       addToast('⚠️ Upload footage terlebih dahulu', 'warning');
       return;
@@ -70,172 +70,55 @@ export default function EditorPage() {
       return;
     }
     
-    let currentAnalysis = state.analysisResults;
-    let currentTrimSegments = state.trimSegments;
-    let currentConcatPath = state.concatPath;
-    let currentCaptionSrt = state.captionSrt;
+    const latestScript = state.scriptHistory[0];
+    const caption = latestScript ? latestScript.caption : '';
+    const duration = latestScript && latestScript.duration ? latestScript.duration : '—';
+    
+    const jobName = `Video - ${new Date().toLocaleTimeString('id-ID')}`;
+    const job = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      name: jobName,
+      fileIds: [...state.uploadedFileIds],
+      audio: activeAudio,
+      resolution: state.outputResolution,
+      scriptText: state.scriptText,
+      caption,
+      targetDuration: duration,
+      status: 'queued' as const,
+      createdAt: new Date().toISOString(),
+    };
 
-    try {
-      // 1. ANALYZE
-      if (currentAnalysis.length === 0) {
-        setAnalyzing(true);
-        setAnalyzeProgress({ done: 0, total: state.uploadedFileIds.length });
-        dispatch({ type: 'SET_PIPELINE_STEP', step: 'analyze' });
+    const newQueue = [...(state.renderQueue || []), job];
+    dispatch({ type: 'ADD_TO_RENDER_QUEUE', job });
+    
+    savePipelineState({ render_queue: newQueue }).catch(() => {});
 
-        const allResults: any[] = [];
-        const batchSize = 3;
-        const ids = [...state.uploadedFileIds];
-        for (let i = 0; i < ids.length; i += batchSize) {
-          const batch = ids.slice(i, i + batchSize);
-          const results = await analyzeFootage(batch);
-          allResults.push(...results);
-          setAnalyzeProgress({ done: Math.min(i + batchSize, ids.length), total: ids.length });
-        }
-        dispatch({ type: 'SET_ANALYSIS', results: allResults });
-        savePipeline({ analysis_results: allResults });
-        currentAnalysis = allResults;
-        setAnalyzing(false);
-      }
+    addToast(`✅ "${jobName}" ditambahkan ke Antrean Render!`, 'success');
 
-      // 2. CAPTION (Optional)
-      if (!currentCaptionSrt && state.apiKeys.openai) {
-        setGeneratingCaption(true);
-        dispatch({ type: 'SET_PIPELINE_STEP', step: 'caption' });
-        const result = await generateCaption(activeAudio!.filename, state.apiKeys.openai);
-        dispatch({
-          type: 'SET_CAPTION_SRT',
-          srt: result.srt,
-          srtPath: result.srt_path,
-          text: result.text,
-        });
-        savePipeline({ caption_srt: result.srt, caption_srt_path: result.srt_path });
-        currentCaptionSrt = result.srt;
-        setGeneratingCaption(false);
-      } else if (!currentCaptionSrt) {
-        addToast('⚠️ OpenAI Key kosong, melewati proses pembuatan caption SRT.', 'info');
-      }
-
-      // 3. TRIM
-      if (currentTrimSegments.length === 0) {
-        setTrimming(true);
-        dispatch({ type: 'SET_PIPELINE_STEP', step: 'trim' });
-        const targetDur = state.ttsAudio?.duration || 60;
-        const trimResult = await trimFootage(currentAnalysis, targetDur);
-        dispatch({ type: 'SET_TRIM_SEGMENTS', segments: trimResult.segments });
-        savePipeline({ trim_segments: trimResult.segments });
-        currentTrimSegments = trimResult.segments;
-        setTrimming(false);
-      }
-
-      // 4. CONCAT
-      if (!currentConcatPath) {
-        setConcating(true);
-        dispatch({ type: 'SET_PIPELINE_STEP', step: 'concat' });
-        const concatResult = await concatFootage(currentTrimSegments, state.uploadedFileIds);
-        dispatch({ type: 'SET_CONCAT_PATH', path: concatResult.output_path });
-        savePipeline({ concat_path: concatResult.output_path });
-        currentConcatPath = concatResult.output_path;
-        setConcating(false);
-      }
-
-      // 5. RENDER
-      setRendering(true);
-      dispatch({ type: 'SET_PIPELINE_STEP', step: 'render' });
-      const w = state.outputResolution === '720×1280' ? 720 : 1080;
-      const h = state.outputResolution === '720×1280' ? 1280 : 1920;
-
-      let videoPath = currentConcatPath;
-      if (currentCaptionSrt) {
-        addToast('💬 Membakar subtitle ke video...', 'info');
-        const burnResult = await burnCaption(videoPath, currentCaptionSrt, activeAudio!.filename);
-        videoPath = burnResult.output_path;
-      }
-
-      const audioPath = activeAudio!.filename;
-      const renderRes = await renderVideo(videoPath, audioPath, w, h);
-      setRenderResult(renderRes);
-      dispatch({ type: 'SET_PIPELINE_STEP', step: 'done' });
-      
-      const outputName = renderRes.output_path.split('/').pop() || 'output.mp4';
-      const now = new Date().toISOString();
-      const latestScript = state.scriptHistory[0];
-      const caption = latestScript ? latestScript.caption : '';
-      const duration = latestScript && latestScript.duration ? latestScript.duration : '—';
-      
-      saveOutputToHistory({
-        name: outputName,
-        duration: duration,
-        size: '—',
-        caption,
-        created_at: now,
-      }).then(res => {
-        dispatch({
-          type: 'ADD_OUTPUT',
-          video: { id: res.id, name: outputName, duration: duration, size: res.size, caption, createdAt: now },
-        });
-      }).catch(() => {
-        dispatch({
-          type: 'ADD_OUTPUT',
-          video: { name: outputName, duration: duration, size: '—', caption, createdAt: now },
-        });
-      });
-      addToast('🎬 Render selesai! Cek di Output Videos', 'success');
-
-      // Reset
-      dispatch({ type: 'CLEAR_FILES' });
-      dispatch({ type: 'CLEAR_FILE_IDS' });
-      dispatch({ type: 'SET_ANALYSIS', results: [] });
-      dispatch({ type: 'SET_TRIM_SEGMENTS', segments: [] });
-      dispatch({ type: 'SET_CONCAT_PATH', path: null });
-      dispatch({ type: 'CLEAR_CAPTION' });
-      dispatch({ type: 'SET_UPLOADED_AUDIO', file: null });
-      dispatch({ type: 'SET_TTS_AUDIO', audio: null });
-      dispatch({ type: 'SET_LIBRARY_AUDIO', audio: null });
-      
-      savePipeline({ 
-        files: [], 
-        analysis_results: [], 
-        trim_segments: [], 
-        concat_path: null, 
-        caption_srt: null, 
-        caption_srt_path: null 
-      });
-      deleteAllFootage().catch(() => {});
-      
-    } catch (err: any) {
-      addToast(`❌ Gagal: ${err.message}`, 'error');
-      dispatch({ type: 'SET_PIPELINE_STEP', step: 'idle' });
-      setAnalyzing(false);
-      setGeneratingCaption(false);
-      setTrimming(false);
-      setConcating(false);
-      setRendering(false);
-    }
-    setRendering(false); // just in case
+    // Reset
+    dispatch({ type: 'CLEAR_FILES' });
+    dispatch({ type: 'CLEAR_FILE_IDS' });
+    dispatch({ type: 'SET_ANALYSIS', results: [] });
+    dispatch({ type: 'SET_TRIM_SEGMENTS', segments: [] });
+    dispatch({ type: 'SET_CONCAT_PATH', path: null });
+    dispatch({ type: 'CLEAR_CAPTION' });
+    dispatch({ type: 'SET_UPLOADED_AUDIO', file: null });
+    dispatch({ type: 'SET_TTS_AUDIO', audio: null });
+    dispatch({ type: 'SET_LIBRARY_AUDIO', audio: null });
+    
+    savePipeline({ 
+      files: [], 
+      analysis_results: [], 
+      trim_segments: [], 
+      concat_path: null, 
+      caption_srt: null, 
+      caption_srt_path: null 
+    });
   };
 
-  const isAutoProcessing = analyzing || generatingCaption || trimming || concating || rendering;
-  const currentProcessLabel = analyzing ? `Menganalisis... ${analyzeProgress.done}/${analyzeProgress.total}`
-    : generatingCaption ? 'Transcribing (Whisper)...'
-    : trimming ? 'Memotong footage...'
-    : concating ? 'Menggabungkan footage...'
-    : rendering ? 'Merender Final...'
-    : '🚀 1-Click Auto Process';
-
+  const isAutoProcessing = false;
+  const currentProcessLabel = '🚀 Tambahkan ke Antrean';
   let overallProgress = 0;
-  if (isAutoProcessing) {
-    if (analyzing) {
-      overallProgress = 10 + (analyzeProgress.total > 0 ? (analyzeProgress.done / analyzeProgress.total) * 20 : 0);
-    } else if (generatingCaption) {
-      overallProgress = 45;
-    } else if (trimming) {
-      overallProgress = 65;
-    } else if (concating) {
-      overallProgress = 80;
-    } else if (rendering) {
-      overallProgress = 95;
-    }
-  }
 
   return (
     <div className="animate-fade-slide-in">
@@ -287,9 +170,9 @@ export default function EditorPage() {
               size="lg"
               className="w-full text-base py-3 shadow-[0_0_20px_var(--accent-glow)] hover:shadow-[0_0_30px_var(--accent)] transition-all h-14"
               disabled={state.uploadedFileIds.length === 0}
-              onClick={handleAutoProcess}
+              onClick={handleAddToQueue}
             >
-              🚀 1-Click Auto Process
+              🚀 Tambahkan ke Antrean
             </Button>
           )}
 

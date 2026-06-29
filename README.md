@@ -2,7 +2,7 @@
 
 **mixFlow** adalah aplikasi all-in-one untuk content creator affiliate: menggabungkan **AI Script Generator** (naskah voice-over otomatis) dengan **Video Editor** (TTS + trim + render) dalam satu workflow.
 
-![Status](https://img.shields.io/badge/status-beta-purple) ![Next.js](https://img.shields.io/badge/Next.js-16.2-black) ![FastAPI](https://img.shields.io/badge/FastAPI-0.49-teal) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![SQLite](https://img.shields.io/badge/DB-SQLite-orange)
+![Status](https://img.shields.io/badge/status-stable_v1.0.0-purple) ![Next.js](https://img.shields.io/badge/Next.js-16.2-black) ![FastAPI](https://img.shields.io/badge/FastAPI-0.49-teal) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![SQLite](https://img.shields.io/badge/DB-SQLite-orange)
 
 ---
 
@@ -34,6 +34,7 @@
 | **🤖 Script Generator** | Generate naskah voice-over pakai AI (DeepSeek, Gemini, OpenAI). 16 gaya bahasa + multi-durasi. |
 | **🔊 TTS Engine** | Text-to-Speech via ElevenLabs. Multi-voice management. Audio library + preview. |
 | **🎞️ Video Editor** | Upload footage, auto-analyze, adaptive trim, concat, render ke 9:16 vertical. |
+| **⏳ Antrean Render** | Sistem antrean (queue) untuk memproses banyak video sekaligus (Bulk Render). |
 | **💬 Auto Caption** | Subtitle otomatis menggunakan Whisper STT dengan kustomisasi font/style. |
 | **🖼️ Auto Cover** | Pembuatan thumbnail otomatis dengan ekstraksi frame OpenCV dan desain template teks (Pillow). |
 | **🎙️ Voice Manager** | Kelola suara TTS. Fitur **Clone Voice** ElevenLabs langsung dari UI. Upload sample audio. |
@@ -113,7 +114,7 @@ mixflow/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                 # Next.js App Router pages
+│   │   ├── app/                 # 5 halaman (editor, script-gen, settings, queue, outputs)
 │   │   ├── components/          # React components
 │   │   ├── contexts/            # Global state (AppContext)
 │   │   └── lib/                 # API client, constants, utils
@@ -238,8 +239,9 @@ flowchart TD
     V3 --> V4[▶ Preview Audio]
     V4 --> V4_1[💬 Auto Caption]
     V4_1 --> V5[🔍 Analyze + Trim]
-    V5 --> V6[🎬 Render Final & Auto Cover]
-    V6 --> D[📥 Download .mp4 / .jpg]
+    V5 --> V6[⏳ Tambah ke Antrean]
+    V6 --> V7[▶️ Bulk Render di Queue]
+    V7 --> D[📥 Download .mp4 / .jpg]
 ```
 
 ### 1. Settings — Isi API Key
@@ -338,12 +340,15 @@ Buka `http://localhost:3000/`:
 │ [🔊 Generate TTS]                                   │
 └─────────────────────────────────────────────────────┘
 
-┌─ 🔄 Progress Pipeline ─────────────────────────────┐
-│  ✓        ✓        ✓        ▶        🔍       ✂️       🔗   │
-│ Upload   TTS    Caption  Preview  Analyze   Trim   Concat   │
-│                           (klik!)                            │
+┌─ 🔄 Progress Pipeline & Antrean ───────────────────┐
+│  ✓        ✓        ✓        ▶                      │
+│ Upload   TTS    Caption  Preview                   │
+│                                                    │
+│               [🚀 Tambahkan ke Antrean]            │
 └─────────────────────────────────────────────────────┘
 ```
+
+> **Catatan:** Setelah ditambahkan ke antrean, buka menu **⏳ Antrean Render** di sidebar untuk memulai proses **Bulk Render**.
 
 ---
 

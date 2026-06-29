@@ -2,8 +2,7 @@ import { APP_NAME, APP_VERSION, APP_DESC } from '@/lib/constants';
 
 export default function AboutPage() {
   return (
-    <div className="flex-1 overflow-y-auto content-scroll p-6 max-md:p-4">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="animate-fade-slide-in space-y-6">
         
         {/* Header */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8 max-md:p-6 shadow-sm relative overflow-hidden">
@@ -89,7 +88,6 @@ export default function AboutPage() {
           </div>
         </div>
 
-      </div>
     </div>
   );
 }

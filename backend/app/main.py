@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="mixFlow API",
     description="Backend untuk AI Video Editor — TTS, Video Processing, Script Generator",
-    version="1.0.0-beta",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
@@ -58,6 +58,6 @@ app.include_router(cover.router, prefix="/api/cover", tags=["Cover"])
 async def health():
     return {
         "status": "ok",
-        "version": "1.0.0-beta",
+        "version": "1.0.0",
         "service": "mixFlow Backend",
     }

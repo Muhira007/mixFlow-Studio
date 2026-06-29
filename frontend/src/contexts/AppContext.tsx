@@ -65,6 +65,21 @@ type GeneratedScript = {
   createdAt: string;
 };
 
+export type RenderJob = {
+  id: string;
+  name: string;
+  fileIds: string[];
+  audio: { url: string; filename: string; duration: number } | null;
+  resolution: '1080×1920' | '720×1280';
+  scriptText: string;
+  caption?: string;
+  targetDuration?: string;
+  status: 'queued' | 'processing' | 'done' | 'error';
+  progress?: number;
+  error?: string;
+  createdAt: string;
+};
+
 export type AppState = {
   apiKeys: {
     elevenlabs: string;
@@ -101,6 +116,7 @@ export type AppState = {
   analysisResults: AnalysisResult[];
   outputHistory: OutputVideo[];
   scriptHistory: GeneratedScript[];
+  renderQueue: RenderJob[];
   toasts: Toast[];
   currentPanel: string;
 };
@@ -139,6 +155,10 @@ type Action =
   | { type: 'ADD_SCRIPT_TO_HISTORY'; script: GeneratedScript }
   | { type: 'REMOVE_SCRIPT_FROM_HISTORY'; id: string }
   | { type: 'CLEAR_SCRIPT_HISTORY' }
+  | { type: 'ADD_TO_RENDER_QUEUE'; job: RenderJob }
+  | { type: 'REMOVE_FROM_RENDER_QUEUE'; id: string }
+  | { type: 'UPDATE_RENDER_QUEUE_JOB'; id: string; updates: Partial<RenderJob> }
+  | { type: 'SET_RENDER_QUEUE'; queue: RenderJob[] }
   | { type: 'ADD_TOAST'; toast: Omit<Toast, 'id'> }
   | { type: 'REMOVE_TOAST'; id: string }
   | { type: 'SET_PANEL'; panel: string }
@@ -185,6 +205,7 @@ const initialState: AppState = {
   analysisResults: [],
   outputHistory: [],
   scriptHistory: [],
+  renderQueue: [],
   toasts: [],
   currentPanel: 'editor',
 };
@@ -337,6 +358,23 @@ function reducer(state: AppState, action: Action): AppState {
     case 'CLEAR_SCRIPT_HISTORY':
       return { ...state, scriptHistory: [] };
 
+    case 'ADD_TO_RENDER_QUEUE':
+      return { ...state, renderQueue: [...state.renderQueue, action.job] };
+
+    case 'REMOVE_FROM_RENDER_QUEUE':
+      return { ...state, renderQueue: state.renderQueue.filter(j => j.id !== action.id) };
+
+    case 'UPDATE_RENDER_QUEUE_JOB':
+      return {
+        ...state,
+        renderQueue: state.renderQueue.map(j =>
+          j.id === action.id ? { ...j, ...action.updates } : j
+        ),
+      };
+
+    case 'SET_RENDER_QUEUE':
+      return { ...state, renderQueue: action.queue };
+
     case 'ADD_TOAST': {
       const toast: Toast = { ...action.toast, id: Date.now().toString(36) + Math.random().toString(36).slice(2) };
       return { ...state, toasts: [...state.toasts.slice(-2), toast] };
@@ -434,6 +472,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           caption: o.caption,
           createdAt: o.created_at,
         }));
+
+        if (remote.pipelineState && remote.pipelineState.render_queue) {
+          try {
+            loaded.renderQueue = Array.isArray(remote.pipelineState.render_queue) 
+              ? remote.pipelineState.render_queue 
+              : [];
+          } catch {
+            loaded.renderQueue = [];
+          }
+        }
 
         // Transient UI-only state from localStorage
         try {
