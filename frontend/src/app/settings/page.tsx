@@ -232,7 +232,7 @@ export default function SettingsPage() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               activeTab === tab.id
-                ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20'
+                ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20 hover:brightness-110'
                 : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)] border border-[var(--border)]'
             }`}
           >
@@ -282,6 +282,9 @@ export default function SettingsPage() {
                   </label>
                   <span className="text-xs font-bold text-[var(--accent)]">{state.settings.ttsStability.toFixed(2)}</span>
                 </div>
+                <p className="text-[0.65rem] text-[var(--text-muted)] mb-2 leading-tight">
+                  Mengontrol emosi dan intonasi AI. Nilai rendah membuat AI bicara lebih ekspresif dan dinamis, sedangkan nilai tinggi membuatnya lebih konsisten, datar, dan monoton.
+                </p>
                 <input
                   type="range"
                   min="0"
@@ -309,6 +312,9 @@ export default function SettingsPage() {
                   </label>
                   <span className="text-xs font-bold text-[var(--accent)]">{state.settings.ttsSimilarityBoost.toFixed(2)}</span>
                 </div>
+                <p className="text-[0.65rem] text-[var(--text-muted)] mb-2 leading-tight">
+                  Seberapa kuat AI dipaksa meniru suara asli. Nilai tinggi akan sangat mirip aslinya namun rawan kaku/aneh. <strong className="text-[var(--accent)] font-medium">Turunkan ke ~0.45</strong> jika pelafalan AI dalam Bahasa Indonesia terdengar canggung.
+                </p>
                 <input
                   type="range"
                   min="0"
@@ -523,7 +529,7 @@ export default function SettingsPage() {
 
       {showResetConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
               <span className="text-2xl">⚡</span>
             </div>

@@ -11,7 +11,7 @@ export function ScriptSourceToggle({ source, onChange }: Props) {
       <button
         className={`flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 border-none cursor-pointer ${
           source === 'text'
-            ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)]'
+            ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)] hover:brightness-110'
             : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
         }`}
         onClick={() => onChange('text')}
@@ -21,7 +21,7 @@ export function ScriptSourceToggle({ source, onChange }: Props) {
       <button
         className={`flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 border-none cursor-pointer ${
           source === 'audio'
-            ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)]'
+            ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)] hover:brightness-110'
             : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
         }`}
         onClick={() => onChange('audio')}

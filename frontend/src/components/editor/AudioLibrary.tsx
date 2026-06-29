@@ -93,7 +93,7 @@ export function AudioLibrary({ selectedUrl, onSelect }: Props) {
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 transition-all ${
                 isPlaying
                   ? 'bg-[var(--accent)] text-white'
-                  : 'bg-[var(--bg)] text-[var(--text-secondary)] hover:text-[var(--accent)]'
+                  : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--accent)]'
               }`}
               onClick={() => playPause(f.filename)}
               title="Preview"

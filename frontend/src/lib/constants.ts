@@ -33,12 +33,13 @@ export const PANEL_NAMES: Record<string, string> = {
 export const AI_PROVIDERS = [
   { value: 'deepseek', label: '🧠 DeepSeek (deepseek-v4-flash)' },
   { value: 'gemini', label: '🔮 Google Gemini (gemini-3.5-flash)' },
+  { value: 'gemini-2.5-flash', label: '⚡ Google Gemini (gemini-2.5-flash)' },
   { value: 'openai', label: '🧬 OpenAI (gpt-5.4-mini)' },
 ] as const;
 
 // Video durations
 export const DURATIONS = [
-  { value: '15', label: '15 detik (~55 kata)' },
+  { value: '15', label: '15 detik (~35 kata)' },
   { value: '30', label: '30 detik (~110 kata)' },
   { value: '60', label: '60 detik (~220 kata)' },
   { value: '90', label: '90 detik (~330 kata)' },

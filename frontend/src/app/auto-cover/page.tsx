@@ -64,13 +64,13 @@ export default function AutoCoverPage() {
     <div className="p-6 max-w-[1100px] w-full mx-auto space-y-6 pb-20">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Auto Cover Configuration</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Auto Cover Configuration</h1>
           <p className="text-sm text-[var(--text-muted)]">Pilih template cover & pengaturan AI untuk generate cover otomatis.</p>
         </div>
         <button 
           onClick={save} 
           disabled={saving}
-          className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
+          className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-slate-50 hover:text-slate-900 dark:hover:text-slate-50 px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
         >
           {saving ? 'Menyimpan...' : '💾 Simpan Konfigurasi'}
         </button>
@@ -79,7 +79,7 @@ export default function AutoCoverPage() {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[var(--accent)]">🖼️</span>
-          <h3 className="text-sm font-bold text-white">Pilihan Template Cover</h3>
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">Pilihan Template Cover</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -136,7 +136,7 @@ export default function AutoCoverPage() {
       </div>
 
       <div>
-        <h3 className="text-sm font-bold text-white mb-3 mt-8">Pengaturan Tambahan</h3>
+        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3 mt-8">Pengaturan Tambahan</h3>
         <Card>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Opacity */}
@@ -156,7 +156,7 @@ export default function AutoCoverPage() {
                   onChange={(e) => update({ bg_opacity: parseInt(e.target.value) })}
                   className="w-full accent-[var(--accent)]"
                 />
-                <span className="text-white font-bold w-12 text-right">{settings.bg_opacity}%</span>
+                <span className="text-[var(--text-primary)] font-bold w-12 text-right">{settings.bg_opacity}%</span>
               </div>
               <p className="text-[0.65rem] text-[var(--text-muted)] mt-4">Transparansi box di belakang teks judul cover. 0 = transparan penuh.</p>
             </div>
@@ -172,7 +172,7 @@ export default function AutoCoverPage() {
               
               <select
                 className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg
-                          px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)] mb-2"
+                          px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] mb-2"
                 value={settings.title_style}
                 onChange={(e) => update({ title_style: e.target.value })}
               >
@@ -183,7 +183,7 @@ export default function AutoCoverPage() {
               <p className="text-[0.65rem] text-[var(--text-muted)] mb-4">Gaya penulisan judul cover oleh AI</p>
 
               <div>
-                <label className="text-xs font-semibold text-white mb-2 block">
+                <label className="text-xs font-semibold text-[var(--text-secondary)] mb-2 block">
                   Maksimum Kata: <span className="text-[var(--accent)]">{settings.title_max_words}</span>
                 </label>
                 <input

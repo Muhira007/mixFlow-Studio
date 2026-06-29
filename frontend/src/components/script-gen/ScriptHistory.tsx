@@ -133,11 +133,11 @@ export function ScriptHistory({ history, onUseInEditor, onDelete, onClearAll }: 
               {/* Expanded full content */}
               {isOpen && (
                 <div className="mt-2 space-y-2">
-                  <div className="bg-[var(--bg)] rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap max-h-[180px] overflow-y-auto">
+                  <div className="bg-[var(--bg-card)] rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap max-h-[180px] overflow-y-auto">
                     {item.script}
                   </div>
                   {item.caption && (
-                    <div className="text-[0.68rem] text-[var(--text-secondary)] bg-[var(--bg)] rounded-lg p-2">
+                    <div className="text-[0.68rem] text-[var(--text-secondary)] bg-[var(--bg-card)] rounded-lg p-2">
                       <span className="font-semibold">📝 Caption: </span>
                       {item.caption}
                     </div>

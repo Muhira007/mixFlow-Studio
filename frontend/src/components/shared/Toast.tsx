@@ -37,7 +37,7 @@ export function ToastContainer() {
         <div
           key={t.id}
           className={cn(
-            'flex items-center gap-2 px-5 py-3 bg-[var(--bg-card)] border border-[var(--border)] border-l-4 rounded-xl shadow-lg text-sm pointer-events-auto animate-[toastIn_0.3s_ease] max-w-[calc(100vw-32px)] whitespace-nowrap',
+            'flex items-center gap-2 px-5 py-3 bg-[var(--bg-toast)] border border-[var(--border-toast)] text-[var(--text-toast)] border-l-4 rounded-xl shadow-xl text-sm pointer-events-auto animate-[toastIn_0.3s_ease] max-w-[calc(100vw-32px)] whitespace-nowrap',
             borderMap[t.type]
           )}
           onClick={() => dispatch({ type: 'REMOVE_TOAST', id: t.id })}

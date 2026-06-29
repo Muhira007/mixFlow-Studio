@@ -181,7 +181,7 @@ export function ScriptTextarea() {
               </div>
 
               {/* TTS Mini Settings */}
-              <div className="p-2.5 bg-[var(--bg)]/50 rounded-lg border border-[var(--border)]">
+              <div className="p-2.5 bg-[var(--bg-card)]/50 rounded-lg border border-[var(--border)]">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-[0.65rem] font-semibold text-[var(--text-secondary)]">
                     Similarity Boost
@@ -357,7 +357,7 @@ export function ScriptTextarea() {
       />
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
               <Trash2 size={24} />
             </div>
@@ -394,7 +394,7 @@ export function ScriptTextarea() {
       {/* Script Popup Modal */}
       {showScriptPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 w-[90%] max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 w-[90%] max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-fade-slide-in">
             <div className="flex items-center justify-between mb-4 border-b border-[var(--border)] pb-3">
               <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <Eye size={20} className="text-[var(--accent)]" />
@@ -408,8 +408,8 @@ export function ScriptTextarea() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto mb-4 bg-[var(--bg-secondary)] rounded-xl p-4 md:p-8 border border-[var(--border)] relative">
-              <div className="bg-white rounded shadow-[0_4px_12px_rgba(0,0,0,0.1)] p-8 md:p-10 w-full max-w-2xl mx-auto min-h-fit text-left h-auto">
-                <div className="text-gray-900 text-lg md:text-xl leading-[1.8] font-serif selection:bg-purple-200 selection:text-gray-900">
+              <div className="bg-[var(--bg-card)] rounded shadow-[0_4px_12px_rgba(0,0,0,0.1)] p-8 md:p-10 w-full max-w-2xl mx-auto min-h-fit text-left h-auto">
+                <div className="text-[var(--text-primary)] text-lg md:text-xl leading-[1.8] font-serif selection:bg-purple-200 selection:text-gray-900">
                   {state.scriptText
                     .replace(/([.?!])\s+/g, "$1\n\n")
                     .split('\n')

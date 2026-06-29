@@ -15,9 +15,9 @@ type ButtonProps = {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-br from-[#6c5ce7] to-[#a855f7] text-white shadow-[0_4px_16px_rgba(108,92,231,0.3)] hover:shadow-[0_6px_24px_rgba(108,92,231,0.5)]',
+    'bg-gradient-to-br from-[#6c5ce7] to-[#a855f7] text-white shadow-[0_4px_16px_rgba(108,92,231,0.3)] hover:shadow-[0_6px_24px_rgba(108,92,231,0.5)] hover:brightness-110',
   success:
-    'bg-gradient-to-br from-[#10b981] to-[#06b6d4] text-white',
+    'bg-gradient-to-br from-[#10b981] to-[#06b6d4] text-white hover:brightness-110 shadow-sm hover:shadow-md',
   outline:
     'bg-transparent border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]',
   danger:

@@ -86,7 +86,7 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-300 text-sm font-medium border relative select-none no-underline min-h-[44px] group overflow-hidden',
                   isActive
-                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)]'
+                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)] hover:brightness-110'
                     : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-sm'
                 )}
               >
@@ -118,7 +118,7 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-300 text-sm font-medium border relative select-none no-underline min-h-[44px] group overflow-hidden',
                   isActive
-                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)]'
+                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)] hover:brightness-110'
                     : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-sm'
                 )}
               >

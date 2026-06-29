@@ -18,12 +18,18 @@
   --text-secondary: #475569;
   --text-muted: #94a3b8;
   --accent: #6c5ce7;
+  --accent-hover: #5a4bcf;
   --accent-glow: rgba(108, 92, 231, 0.15);
   --accent-2: #a855f7;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
+
+  /* Toast colors for light mode (inverted for better visibility) */
+  --bg-toast: #1e293b;
+  --text-toast: #f8fafc;
+  --border-toast: #334155;
 
   /* Layout dimensions */
   --sidebar-width: 260px;
@@ -47,12 +53,18 @@
   --text-secondary: #9898b8;
   --text-muted: #68688a;
   --accent: #6c5ce7;
+  --accent-hover: #7b6eea;
   --accent-glow: rgba(108, 92, 231, 0.3);
   --accent-2: #a855f7;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
+  
+  /* Toast colors for dark mode (keep current card style) */
+  --bg-toast: #181830;
+  --text-toast: #e8e8f0;
+  --border-toast: #252545;
 }
 
 /* Base */

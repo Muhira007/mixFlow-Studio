@@ -79,12 +79,12 @@ export default function AutoCaptionPage() {
   return (
     <div className="p-6 max-w-[900px] w-full mx-auto space-y-6 pb-20">
       <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Auto Caption Configuration</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Auto Caption Configuration</h1>
         <p className="text-sm text-[var(--text-muted)]">Atur gaya tampilan subtitle/caption otomatis untuk video Anda.</p>
       </div>
 
       <div>
-        <h3 className="text-sm font-bold text-white mb-3">Pilihan Template</h3>
+        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3">Pilihan Template</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {TEMPLATES.map(tpl => {
             const isActive = tpl.id === settings.template;
@@ -97,7 +97,7 @@ export default function AutoCaptionPage() {
                 }`}
               >
                 <div className={`font-bold mb-1 ${
-                  isActive ? 'text-[var(--accent)]' : 'text-white'
+                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'
                 }`}>{tpl.label}</div>
                 <div className="text-xs text-[var(--text-muted)] leading-relaxed">{tpl.desc}</div>
               </div>
@@ -107,7 +107,7 @@ export default function AutoCaptionPage() {
       </div>
 
       <div>
-        <h3 className="text-sm font-bold text-white mb-3">Pengaturan Tambahan (Opsional)</h3>
+        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3">Pengaturan Tambahan (Opsional)</h3>
         <Card>
           <div className="space-y-6">
             {/* Font row */}
@@ -233,7 +233,7 @@ export default function AutoCaptionPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">🤖</span>
-                <h4 className="font-bold text-white text-sm">Caption Sosial Media (AI DeepSeek)</h4>
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">Caption Sosial Media (AI DeepSeek)</h4>
               </div>
               <p className="text-xs text-[var(--text-muted)] mb-4">Hasil transkrip video akan diproses ulang oleh AI untuk menjadi caption siap upload sosmed.</p>
               
@@ -279,7 +279,7 @@ export default function AutoCaptionPage() {
               <button 
                 onClick={save} 
                 disabled={saving}
-                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
+                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-slate-50 hover:text-slate-900 dark:hover:text-slate-50 px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Menyimpan...' : '💾 Simpan Konfigurasi'}
               </button>

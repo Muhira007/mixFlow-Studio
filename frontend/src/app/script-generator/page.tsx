@@ -26,10 +26,10 @@ export default function ScriptGeneratorPage() {
   const [loading, setLoading] = useState(false);
 
   /** Map provider value to its API key from settings */
-  const getApiKey = (prov: string): string => {
+  const getApiKey = (prov: string) => {
+    if (prov.includes('gemini')) return state.apiKeys.gemini;
     const map: Record<string, string> = {
       deepseek: state.apiKeys.deepseek,
-      gemini: state.apiKeys.gemini,
       openai: state.apiKeys.openai,
     };
     return map[prov] || '';

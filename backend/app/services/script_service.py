@@ -47,7 +47,7 @@ OUTPUT FORMAT (JSON):
 # ============================================
 
 DURATION_WORD_TARGET: dict[str, dict[str, int]] = {
-    "15": {"min": 45, "target": 55, "max": 65},
+    "15": {"min": 25, "target": 35, "max": 45},
     "30": {"min": 95, "target": 110, "max": 125},
     "60": {"min": 195, "target": 220, "max": 240},
     "90": {"min": 300, "target": 330, "max": 355},
@@ -134,6 +134,7 @@ async def _generate_deepseek(
 async def _generate_gemini(
     user_prompt: str,
     api_key: str,
+    model: str = GEMINI_MODEL
 ) -> dict:
     """Generate script via Google Gemini API."""
     try:
@@ -141,13 +142,13 @@ async def _generate_gemini(
         client = genai.Client(api_key=api_key)
         full_prompt = f"{SYSTEM_PROMPT}\n\n---\n\n{user_prompt}"
         response = client.models.generate_content(
-            model=GEMINI_MODEL,
+            model=model,
             contents=full_prompt,
         )
         return _parse_json_output(response.text)
     except ImportError:
         # Fallback: use REST API directly
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload = {
             "contents": [{
                 "parts": [{"text": f"{SYSTEM_PROMPT}\n\n---\n\n{user_prompt}"}]
@@ -256,6 +257,9 @@ def _clean_result(result: dict, original: str) -> dict:
     # If still no script, use raw original text as-is
     if not script.strip():
         script = original
+        
+    if not script.strip():
+        script = "⚠️ AI gagal membuat naskah (output kosong). Coba sesuaikan kata kunci atau gunakan provider AI lain."
 
     return {
         "script": script.strip(),
@@ -319,7 +323,9 @@ async def generate_script(
     if "deepseek" in provider_lower:
         result = await _generate_deepseek(user_prompt, api_key)
     elif "gemini" in provider_lower:
-        result = await _generate_gemini(user_prompt, api_key)
+        # Determine specific Gemini model version
+        model = "gemini-2.5-flash" if "2.5" in provider_lower else GEMINI_MODEL
+        result = await _generate_gemini(user_prompt, api_key, model=model)
     elif "openai" in provider_lower or "gpt" in provider_lower:
         result = await _generate_openai(user_prompt, api_key)
     else:

@@ -206,7 +206,7 @@ export default function OutputsPage() {
       {/* MODAL HAPUS CONCAT */}
       {deleteConcatConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
               <Trash2 size={24} />
             </div>
@@ -238,7 +238,7 @@ export default function OutputsPage() {
       {/* MODAL HAPUS CAPTIONED */}
       {deleteCaptionedConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
               <Trash2 size={24} />
             </div>
@@ -255,7 +255,7 @@ export default function OutputsPage() {
                 onClick={async () => {
                   setDeleteCaptionedConfirm(false);
                   try {
-                    const res = await deleteCleanupCaptioned();
+                    const res = await deleteCleanupCaptioned() as any;
                     addToast(`🗑️ ${res.count} file temp captioned dihapus!`, 'success');
                   } catch (e) {
                     addToast('Gagal menghapus file captioned', 'error');
@@ -270,7 +270,7 @@ export default function OutputsPage() {
       {/* MODAL HAPUS VIDEO SINGLE */}
       {deleteOutputConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-fade-slide-in">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
               <Trash2 size={24} />
             </div>

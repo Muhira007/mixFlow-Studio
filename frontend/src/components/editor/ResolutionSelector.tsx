@@ -15,7 +15,7 @@ export function ResolutionSelector({ resolution, onChange }: Props) {
         <button
           className={`flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 border-none cursor-pointer ${
             resolution === '1080×1920'
-              ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)]'
+              ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)] hover:brightness-110'
               : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           }`}
           onClick={() => onChange('1080×1920')}
@@ -26,7 +26,7 @@ export function ResolutionSelector({ resolution, onChange }: Props) {
         <button
           className={`flex-1 px-3 py-2 rounded-md text-xs font-semibold transition-all duration-200 border-none cursor-pointer ${
             resolution === '720×1280'
-              ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)]'
+              ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_var(--accent-glow)] hover:brightness-110'
               : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           }`}
           onClick={() => onChange('720×1280')}
