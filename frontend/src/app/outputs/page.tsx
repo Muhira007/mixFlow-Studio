@@ -5,7 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { BACKEND_URL, deleteOutputFromHistory, deleteCleanupConcat, deleteCleanupCaptioned } from '@/lib/api';
-import { Copy, Download, Trash2, FileText, Play, X } from 'lucide-react';
+import { Copy, Download, Trash2, FileText, Play, X, CheckSquare, Square } from 'lucide-react';
 
 export default function OutputsPage() {
   const { state, dispatch, addToast } = useApp();
@@ -13,6 +13,45 @@ export default function OutputsPage() {
   const [deleteConcatConfirm, setDeleteConcatConfirm] = useState(false);
   const [deleteCaptionedConfirm, setDeleteCaptionedConfirm] = useState(false);
   const [deleteOutputConfirm, setDeleteOutputConfirm] = useState<{ id?: number; index: number; name: string } | null>(null);
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const toggleSelect = (name: string) => {
+    setSelectedNames(prev => 
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    );
+  };
+
+  const selectAll = () => {
+    if (selectedNames.length === state.outputHistory.length) {
+      setSelectedNames([]);
+    } else {
+      setSelectedNames(state.outputHistory.map(j => j.name));
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selectedNames.length === 0) return;
+    setIsDeleting(true);
+    
+    const itemsToDelete = state.outputHistory.filter(i => selectedNames.includes(i.name));
+    
+    for (const item of itemsToDelete) {
+      if (item.id) {
+        try {
+          await deleteOutputFromHistory(item.id);
+        } catch (e) {
+          console.error(`Failed to delete ${item.name}`, e);
+        }
+      }
+    }
+    
+    const newOutputHistory = state.outputHistory.filter(i => !selectedNames.includes(i.name));
+    dispatch({ type: 'LOAD_STATE', state: { outputHistory: newOutputHistory } });
+    setSelectedNames([]);
+    setIsDeleting(false);
+    addToast(`🗑️ ${itemsToDelete.length} video dihapus!`, 'success');
+  };
 
   return (
     <div className="animate-fade-slide-in">
@@ -25,6 +64,18 @@ export default function OutputsPage() {
             Video yang sudah selesai diproses dan siap diunduh beserta caption sosial medianya.
           </p>
           <div className="flex gap-2">
+            {selectedNames.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={deleteSelected}
+                disabled={isDeleting}
+                className="text-red-400 hover:bg-red-500 hover:text-white border-red-500/20 text-xs py-1 px-3"
+              >
+                <Trash2 size={12} className="mr-1.5" />
+                Hapus Terpilih ({selectedNames.length})
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -57,7 +108,15 @@ export default function OutputsPage() {
           <table className="w-full border-collapse text-sm text-left">
             <thead>
               <tr className="bg-[var(--bg-secondary)]/80 border-b border-[var(--border)] text-[var(--text-muted)] text-xs uppercase tracking-wider">
-                <th className="py-4 px-5 font-semibold w-12 text-center">#</th>
+                <th className="py-4 px-5 font-semibold w-12 text-center">
+                  <button onClick={selectAll} className="hover:text-[var(--text-primary)] transition-colors">
+                    {selectedNames.length === state.outputHistory.length && state.outputHistory.length > 0 ? (
+                      <CheckSquare size={16} className="text-[var(--accent)]" />
+                    ) : (
+                      <Square size={16} />
+                    )}
+                  </button>
+                </th>
                 <th className="py-4 px-5 font-semibold w-28 text-center">Preview</th>
                 <th className="py-4 px-5 font-semibold min-w-[200px]">Nama File</th>
                 <th className="py-4 px-5 font-semibold min-w-[250px]">Caption (AI DeepSeek)</th>
@@ -79,7 +138,18 @@ export default function OutputsPage() {
                     : '—';
                   return (
                     <tr key={i} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-card)] transition-colors group">
-                      <td className="py-4 px-5 text-center text-[var(--text-muted)] font-medium">{i + 1}</td>
+                      <td className="py-4 px-5 text-center">
+                        <button 
+                          onClick={() => toggleSelect(item.name)}
+                          className="hover:text-[var(--text-primary)] transition-colors"
+                        >
+                          {selectedNames.includes(item.name) ? (
+                            <CheckSquare size={16} className="text-[var(--accent)]" />
+                          ) : (
+                            <Square size={16} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]" />
+                          )}
+                        </button>
+                      </td>
                       <td className="py-4 px-5 text-center">
                         <div 
                           className="w-16 h-16 mx-auto bg-black rounded-lg overflow-hidden relative cursor-pointer group/thumb shadow-sm ring-1 ring-[var(--border)] hover:ring-[var(--accent)] transition-all"

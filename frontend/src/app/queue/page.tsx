@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
-import { Play, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Play, Trash2, CheckSquare, Square, BarChart2, X } from 'lucide-react';
 import {
   analyzeFootage,
   generateCaption,
@@ -16,12 +16,13 @@ import {
   savePipelineState,
   deleteAllFootage
 } from '@/lib/api';
+import { AnalysisTable } from '@/components/editor/AnalysisTable';
 
 export default function QueuePage() {
   const { state, dispatch, addToast } = useApp();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [processStatus, setProcessStatus] = useState<string>('');
+  const [showAnalysisModal, setShowAnalysisModal] = useState<string | null>(null);
   
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => 
@@ -53,16 +54,12 @@ export default function QueuePage() {
     addToast(`🗑️ ${selectedIds.length} antrean dihapus`, 'success');
   };
 
-  const processJobs = async () => {
-    if (selectedIds.length === 0) {
-      addToast('⚠️ Pilih minimal 1 antrean untuk dirender', 'warning');
-      return;
-    }
-
-    const jobsToProcess = state.renderQueue.filter(j => selectedIds.includes(j.id) && j.status !== 'done');
+  const processJobs = async (specificIds?: string[]) => {
+    const targetIds = specificIds || selectedIds;
+    const jobsToProcess = state.renderQueue.filter(j => targetIds.includes(j.id) && j.status !== 'done');
     
     if (jobsToProcess.length === 0) {
-      addToast('⚠️ Tidak ada antrean baru yang dipilih', 'warning');
+      if (!specificIds) addToast('⚠️ Tidak ada antrean baru yang dipilih', 'warning');
       return;
     }
 
@@ -71,13 +68,13 @@ export default function QueuePage() {
 
     for (const job of jobsToProcess) {
       setProcessingId(job.id);
-      dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { status: 'processing', progress: 0, error: undefined } });
+      dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { status: 'processing', progress: 0, stepText: '🚀 Persiapan...', error: undefined } });
       
-      currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, status: 'processing', progress: 0, error: undefined } : q);
+      currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, status: 'processing', progress: 0, stepText: '🚀 Persiapan...', error: undefined } : q);
       
       try {
         // 1. Analyze
-        setProcessStatus('Menganalisis footage...');
+        let stepText = '🔍 Menganalisis Klip Pintar...';
         const allResults: any[] = [];
         const batchSize = 3;
         for (let i = 0; i < job.fileIds.length; i += batchSize) {
@@ -85,17 +82,20 @@ export default function QueuePage() {
           const results = await analyzeFootage(batch);
           allResults.push(...results);
           const progress = 10 + (Math.min(i + batchSize, job.fileIds.length) / job.fileIds.length) * 20;
-          dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress } });
-          currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress } : q);
+          dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress, stepText } });
+          currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress, stepText } : q);
         }
+        
+        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { analysisResults: allResults } });
+        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, analysisResults: allResults } : q);
 
         // 2. Caption
         let srt = null;
         let srtPath = null;
         if (state.apiKeys.openai && job.audio) {
-          setProcessStatus('Transcribing (Whisper)...');
-          dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 45 } });
-          currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 45 } : q);
+          stepText = '💬 Transkripsi AI (Whisper)...';
+          dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 45, stepText } });
+          currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 45, stepText } : q);
           
           const result = await generateCaption(job.audio.filename, state.apiKeys.openai);
           srt = result.srt;
@@ -103,23 +103,23 @@ export default function QueuePage() {
         }
 
         // 3. Trim
-        setProcessStatus('Memotong footage...');
-        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 65 } });
-        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 65 } : q);
+        stepText = '✂️ Memotong Cerdas (Adaptive Trim)...';
+        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 65, stepText } });
+        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 65, stepText } : q);
         const targetDur = job.audio?.duration || 60;
         const trimResult = await trimFootage(allResults, targetDur);
         
         // 4. Concat
-        setProcessStatus('Menggabungkan footage...');
-        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 80 } });
-        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 80 } : q);
+        stepText = '🔗 Menyambungkan Mahakarya...';
+        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 80, stepText } });
+        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 80, stepText } : q);
         const concatResult = await concatFootage(trimResult.segments, job.fileIds);
         let videoPath = concatResult.output_path;
 
         // 5. Render
-        setProcessStatus('Merender Final...');
-        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 95 } });
-        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 95 } : q);
+        stepText = '🎬 Merender Final (Polesan Akhir)...';
+        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 95, stepText } });
+        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 95, stepText } : q);
         const w = job.resolution === '720×1280' ? 720 : 1080;
         const h = job.resolution === '720×1280' ? 1280 : 1920;
 
@@ -147,8 +147,8 @@ export default function QueuePage() {
           });
         }
 
-        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { status: 'done', progress: 100 } });
-        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, status: 'done', progress: 100 } : q);
+        dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { status: 'done', progress: 100, stepText: '✨ Selesai!' } });
+        currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, status: 'done', progress: 100, stepText: '✨ Selesai!' } : q);
         addToast(`✅ ${job.name} selesai dirender!`, 'success');
 
       } catch (err: any) {
@@ -162,12 +162,21 @@ export default function QueuePage() {
     }
 
     setProcessingId(null);
-    setProcessStatus('');
     setSelectedIds([]);
   };
 
   return (
     <div className="animate-fade-slide-in space-y-6">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes cyber-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .progress-cyber {
+          background-size: 200% 100%;
+          animation: cyber-shimmer 2s linear infinite;
+        }
+      `}} />
       <div className="flex flex-wrap justify-between items-end mb-5 gap-4">
         <div>
           <h1 className="text-[1.4rem] font-bold mb-0.5 leading-tight">Antrean Render</h1>
@@ -189,7 +198,7 @@ export default function QueuePage() {
           )}
           <Button
             variant="primary"
-            onClick={processJobs}
+            onClick={() => processJobs()}
             disabled={selectedIds.length === 0 || processingId !== null}
             className="shadow-[0_0_15px_var(--accent-glow)] hover:shadow-[0_0_20px_var(--accent)]"
           >
@@ -214,10 +223,11 @@ export default function QueuePage() {
                   </button>
                 </th>
                 <th className="py-4 px-5 font-semibold">Nama Antrean</th>
+                <th className="py-4 px-5 font-semibold text-center w-24">Aksi Cepat</th>
                 <th className="py-4 px-5 font-semibold text-center">Footage</th>
+                <th className="py-4 px-5 font-semibold text-center">Hasil Analisis</th>
                 <th className="py-4 px-5 font-semibold text-center">Resolusi</th>
                 <th className="py-4 px-5 font-semibold text-center">Status</th>
-                <th className="py-4 px-5 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -242,17 +252,23 @@ export default function QueuePage() {
                       <div className="text-xs text-[var(--text-muted)] truncate max-w-[200px]">
                         {new Date(job.createdAt).toLocaleString('id-ID')}
                       </div>
-                      {processingId === job.id && (
-                        <div className="mt-2 relative w-full h-1.5 rounded-full bg-[var(--bg-input)] overflow-hidden">
+                      {job.status === 'processing' && (
+                        <div className="mt-3 relative w-full h-2 rounded-full bg-[var(--bg-input)] overflow-hidden shadow-inner border border-[var(--border)]/40">
                           <div 
-                            className="absolute top-0 left-0 h-full bg-[var(--accent)] transition-all duration-300" 
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--accent)] via-purple-400 to-[var(--accent)] progress-cyber transition-all duration-300 ease-out" 
                             style={{ width: `${job.progress || 0}%` }} 
                           />
+                          <div className="absolute inset-0 bg-white/20 progress-cyber mix-blend-overlay" style={{ width: `${job.progress || 0}%` }} />
                         </div>
                       )}
-                      {processingId === job.id && (
-                        <div className="text-[0.65rem] text-[var(--accent)] mt-1 font-medium">
-                          {processStatus}
+                      {job.status === 'processing' && (
+                        <div className="flex justify-between items-center mt-1.5">
+                          <span className="text-[0.65rem] font-bold text-[var(--accent)] animate-pulse">
+                            {job.stepText || '🚀 Memproses...'}
+                          </span>
+                          <span className="text-[0.65rem] font-mono text-[var(--text-muted)]">
+                            {Math.round(job.progress || 0)}%
+                          </span>
                         </div>
                       )}
                       {job.error && (
@@ -261,8 +277,44 @@ export default function QueuePage() {
                         </div>
                       )}
                     </td>
+                    <td className="py-4 px-5 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white border-[var(--accent)]/20 px-2 h-8"
+                          onClick={() => processJobs([job.id])}
+                          disabled={job.status === 'processing' || job.status === 'done' || processingId !== null}
+                          title="Render Video Ini"
+                        >
+                          <Play size={14} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-400 hover:bg-red-500 hover:text-white border-red-500/20 px-2 h-8"
+                          onClick={() => removeJob(job.id)}
+                          disabled={job.status === 'processing' || processingId !== null}
+                          title="Hapus Antrean Ini"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </td>
                     <td className="py-4 px-5 text-center text-[var(--text-secondary)]">
                       {job.fileIds.length} klip
+                    </td>
+                    <td className="py-4 px-5 text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!job.analysisResults || job.analysisResults.length === 0}
+                        onClick={() => setShowAnalysisModal(job.id)}
+                        className="px-2 h-8 mx-auto"
+                        title="Lihat Hasil Analisis"
+                      >
+                        <BarChart2 size={14} className="text-[var(--accent)]" />
+                      </Button>
                     </td>
                     <td className="py-4 px-5 text-center text-[var(--text-secondary)]">
                       {job.resolution}
@@ -273,22 +325,11 @@ export default function QueuePage() {
                       {job.status === 'done' && <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-xs rounded font-medium">Selesai</span>}
                       {job.status === 'error' && <span className="px-2 py-1 bg-red-500/10 text-red-500 text-xs rounded font-medium">Gagal</span>}
                     </td>
-                    <td className="py-4 px-5 text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-400 hover:bg-red-500 hover:text-white border-red-500/20 px-2 h-8"
-                        onClick={() => removeJob(job.id)}
-                        disabled={job.status === 'processing' || processingId !== null}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-16 text-[var(--text-muted)]">
+                  <td colSpan={7} className="text-center py-16 text-[var(--text-muted)]">
                     <div className="flex flex-col items-center justify-center opacity-80">
                       <div className="w-16 h-16 rounded-full bg-[var(--bg-input)] flex items-center justify-center mb-4">
                         <span className="text-3xl">⏳</span>
@@ -305,6 +346,39 @@ export default function QueuePage() {
           </table>
         </div>
       </Card>
+
+      {/* Analysis Modal */}
+      {showAnalysisModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col relative animate-fade-slide-in">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <span>📊</span> Hasil Analisis Footage
+              </h3>
+              <button 
+                onClick={() => setShowAnalysisModal(null)}
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-input)] transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto content-scroll">
+              <AnalysisTable 
+                results={state.renderQueue.find(j => j.id === showAnalysisModal)?.analysisResults} 
+                hideLoading={true}
+                noCard={true}
+              />
+            </div>
+            
+            <div className="p-4 border-t border-[var(--border)] flex justify-end">
+              <Button variant="primary" onClick={() => setShowAnalysisModal(null)}>
+                Tutup
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

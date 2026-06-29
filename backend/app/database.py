@@ -295,6 +295,13 @@ def add_file_record(fid: str, name: str, orig: str, work: str, proxied: bool, re
     conn.close()
 
 
+def get_file_record(fid: str) -> dict | None:
+    conn = get_db()
+    row = conn.execute("SELECT * FROM file_registry WHERE file_id = ?", (fid,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def list_file_records() -> list[dict]:
     conn = get_db()
     rows = conn.execute("SELECT * FROM file_registry ORDER BY file_id").fetchall()

@@ -87,6 +87,7 @@ class OutputPayload(BaseModel):
     name: str
     duration: str = ""
     size: str = ""
+    caption: str = ""
     created_at: str
 
 

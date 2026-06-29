@@ -23,7 +23,7 @@ from app.services.video_service import (
     concat_clips,
 )
 from app.services.renderer import render_final
-from app.database import add_file_record, list_file_records, clear_file_records
+from app.database import add_file_record, list_file_records, clear_file_records, get_file_record
 
 router = APIRouter()
 
@@ -169,6 +169,11 @@ async def analyze_footage(file_ids: list[str] = Form(...)):
     for fid in file_ids:
         info = file_registry.get(fid)
         if not info:
+            info = get_file_record(fid)
+            if info:
+                file_registry[fid] = info
+        
+        if not info:
             raise HTTPException(status_code=404, detail=f"File tidak ditemukan: {fid}")
 
         working_path = Path(info["working_path"])
@@ -211,6 +216,11 @@ async def concat_footage(req: ConcatRequest):
     source_files = []
     for fid in req.file_ids:
         info = file_registry.get(fid)
+        if not info:
+            info = get_file_record(fid)
+            if info:
+                file_registry[fid] = info
+        
         if not info:
             raise HTTPException(status_code=404, detail=f"File tidak ditemukan: {fid}")
         source_files.append(Path(info["working_path"]))

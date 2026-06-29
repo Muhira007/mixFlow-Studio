@@ -76,6 +76,8 @@ export type RenderJob = {
   targetDuration?: string;
   status: 'queued' | 'processing' | 'done' | 'error';
   progress?: number;
+  stepText?: string;
+  analysisResults?: AnalysisResult[];
   error?: string;
   createdAt: string;
 };
