@@ -13,6 +13,9 @@ const DEFAULT_SETTINGS: CaptionSettings = {
   position: 85,
   uppercase: false,
   template: 'plain',
+  social_max_words: 30,
+  social_hashtags: 3,
+  social_tone: 'casual',
 };
 
 const FONT_OPTIONS = [

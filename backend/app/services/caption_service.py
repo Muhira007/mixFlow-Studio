@@ -1,5 +1,5 @@
 """
-mixFlow — Auto Caption Service
+mixFlow Studio — Auto Caption Service
 Handles: Whisper-1 STT transcription → SRT generation → burn subtitle to video.
 
 Style: Plain (teks putih, 5 kata per chunk, timing sesuai word timestamps).

@@ -1,5 +1,5 @@
 """
-mixFlow — Video Router
+mixFlow Studio — Video Router
 POST /api/video/upload    — Upload footage + auto pre-process (proxy if >1080p)
 POST /api/video/analyze   — Analyze footage quality (blur, shake)
 POST /api/video/trim      — Calculate adaptive trim segments

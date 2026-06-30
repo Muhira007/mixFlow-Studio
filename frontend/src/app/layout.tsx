@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'mixFlow — AI Video Editor for Affiliate',
+  title: 'mixFlow Studio — AI Video Editor for Affiliate',
   description:
     'Aplikasi all-in-one untuk content creator affiliate: AI Script Generator + Video Editor dengan TTS dan adaptive trim otomatis.',
   icons: { icon: '/favicon.ico' },

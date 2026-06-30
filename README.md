@@ -1,6 +1,6 @@
-# 🎬 mixFlow — AI Video Editor for Content Creator Affiliate
+# 🎬 mixFlow Studio — AI Video Editor for Content Creator Affiliate
 
-**mixFlow** adalah aplikasi all-in-one untuk content creator affiliate: menggabungkan **AI Script Generator** (naskah voice-over otomatis) dengan **Video Editor** (TTS + trim + render) dalam satu workflow.
+**mixFlow Studio** adalah aplikasi all-in-one untuk content creator affiliate: menggabungkan **AI Script Generator** (naskah voice-over otomatis) dengan **Video Editor** (TTS + trim + render) dalam satu workflow.
 
 ![Status](https://img.shields.io/badge/status-stable_v1.0.0-purple) ![Next.js](https://img.shields.io/badge/Next.js-16.2-black) ![FastAPI](https://img.shields.io/badge/FastAPI-0.49-teal) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![SQLite](https://img.shields.io/badge/DB-SQLite-orange)
 
@@ -135,7 +135,7 @@ mixflow/
 Tutorial ini dirancang dari nol (komputer Windows baru) hingga aplikasi bisa berjalan.
 
 ### Tahap 1: Install WSL (Windows Subsystem for Linux)
-Jika Anda pengguna Windows 10/11, mixFlow wajib dijalankan di dalam WSL karena library pemrosesan video (seperti `ffmpeg` dan `moviepy`) jauh lebih stabil di lingkungan Linux.
+Jika Anda pengguna Windows 10/11, mixFlow Studio wajib dijalankan di dalam WSL karena library pemrosesan video (seperti `ffmpeg` dan `moviepy`) jauh lebih stabil di lingkungan Linux.
 
 1. Buka **PowerShell** sebagai Administrator (klik kanan Start, pilih Windows PowerShell (Admin)).
 2. Ketik perintah berikut dan tekan Enter:
@@ -167,7 +167,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 nvm install 22
 ```
 
-### Tahap 3: Clone & Setup mixFlow
+### Tahap 3: Clone & Setup mixFlow Studio
 
 Masih di dalam terminal Ubuntu, mari kita unduh dan setup aplikasinya.
 
@@ -219,7 +219,7 @@ Aplikasi sekarang bisa diakses melalui browser Windows Anda di:
 
 ```mermaid
 flowchart TD
-    A[🎬 Buka mixFlow] --> B{Ada API Key?}
+    A[🎬 Buka mixFlow Studio] --> B{Ada API Key?}
     B -- Tidak --> S[⚙️ Settings: Isi API Key]
     S --> S2[🎙️ Tambah Voice TTS]
     S2 --> C
@@ -458,7 +458,7 @@ Buka `http://localhost:8000/api/db` — tampilan HTML tabel semua data live. Kli
 ## ❓ FAQ (Tanya Jawab & Troubleshooting)
 
 **Q: Kenapa pakai SQLite, bukan PostgreSQL/MySQL?**
-A: mixFlow adalah **desktop app** (jalan di laptop pribadi). SQLite tanpa server, tanpa setup, database 1 file langsung pakai. Cocok untuk single-user.
+A: mixFlow Studio adalah **desktop app** (jalan di laptop pribadi). SQLite tanpa server, tanpa setup, database 1 file langsung pakai. Cocok untuk single-user.
 
 **Q: Kenapa pakai WSL, bukan native Windows?**
 A: Backend Python (OpenCV, moviepy, FFmpeg) jauh lebih stabil di Linux. WSL memberikan environment Linux tanpa dual-boot.

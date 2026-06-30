@@ -1,8 +1,8 @@
 @echo off
-title mixFlow - Stop All Services
+title mixFlow Studio - Stop All Services
 color 0C
 echo ============================================
-echo   mixFlow -- Stop via WSL
+echo   mixFlow Studio -- Stop via WSL
 echo ============================================
 echo.
 echo Menghentikan semua service...

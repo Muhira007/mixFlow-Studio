@@ -1,5 +1,5 @@
 """
-mixFlow — Scraper Router
+mixFlow Studio — Scraper Router
 POST /api/scrape  — Scrape product URL for title & description
 """
 

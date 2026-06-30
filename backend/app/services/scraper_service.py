@@ -1,5 +1,5 @@
 """
-mixFlow — Web Scraper Service
+mixFlow Studio — Web Scraper Service
 Handles: product URL scraping (title, description, body text).
 """
 

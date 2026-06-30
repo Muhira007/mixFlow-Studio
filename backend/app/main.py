@@ -1,5 +1,5 @@
 """
-mixFlow Backend — FastAPI Application Entry Point
+mixFlow Studio Backend — FastAPI Application Entry Point
 """
 
 from contextlib import asynccontextmanager
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="mixFlow API",
+    title="mixFlow Studio API",
     description="Backend untuk AI Video Editor — TTS, Video Processing, Script Generator",
     version="1.0.0",
     lifespan=lifespan,
@@ -59,5 +59,5 @@ async def health():
     return {
         "status": "ok",
         "version": "1.0.0",
-        "service": "mixFlow Backend",
+        "service": "mixFlow Studio Backend",
     }

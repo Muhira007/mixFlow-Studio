@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================
-# mixFlow — Stop All Services
+# mixFlow Studio — Stop All Services
 # ============================================
 set -e
 
@@ -14,7 +14,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║      mixFlow — Stop All Services        ║${NC}"
+echo -e "${CYAN}║      mixFlow Studio — Stop All Services        ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
 echo ""
 

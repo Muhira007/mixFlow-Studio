@@ -1,4 +1,4 @@
-# FastAPI Backend — mixFlow
+# FastAPI Backend — mixFlow Studio
 # ============================================
 
 # Web framework

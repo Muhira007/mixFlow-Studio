@@ -1,5 +1,5 @@
 """
-mixFlow — SQLite Global Database
+mixFlow Studio — SQLite Global Database
 Persistent storage for ALL app data:
   api_keys, settings, voices, script_history, output_history
 """

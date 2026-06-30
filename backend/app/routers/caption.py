@@ -1,5 +1,5 @@
 """
-mixFlow — Caption Router
+mixFlow Studio — Caption Router
 POST /api/caption/generate   — Transcribe TTS audio via Whisper-1 → SRT
 GET  /api/caption/settings   — Read caption config
 POST /api/caption/settings   — Save caption config

@@ -30,7 +30,7 @@ class VoiceScriptPDF(FPDF):
         self.set_y(-15)
         self.set_font("Sans", "", 7)
         self.set_text_color(140, 140, 140)
-        self.cell(0, 10, f"mixFlow Voice Cloning Script — halaman {self.page_no()}/{{nb}}", align="C")
+        self.cell(0, 10, f"mixFlow Studio Voice Cloning Script — halaman {self.page_no()}/{{nb}}", align="C")
 
     def section_title(self, title: str, number: str):
         self.set_fill_color(238, 242, 255)
@@ -86,7 +86,7 @@ def main():
     pdf.set_y(52)
     pdf.multi_cell(0, 5.5,
         "Skrip ini dirancang untuk menjadi sample audio saat melakukan voice cloning di ElevenLabs "
-        "melalui fitur Clone My Voice milik mixFlow. Skrip mencakup seluruh fonem kritis bahasa "
+        "melalui fitur Clone My Voice milik mixFlow Studio. Skrip mencakup seluruh fonem kritis bahasa "
         "Indonesia — terutama perbedaan e pepet (ə) dan e keras (e) — agar hasil clone memiliki "
         "pelafalan yang akurat, natural, dan standar.\n"
         "Baca dengan suara natural seperti sedang berbincang dengan teman. "
@@ -102,7 +102,7 @@ def main():
         ("Kecepatan", "Natural. Jangan ngebut seperti baca berita, jangan terlalu lambat."),
         ("Intonasi", "Seperti ngomong ke teman — ada naik-turun, ekspresif."),
         ("E Pepet (ə)", 'Kata seperti "senang", "belajar", "kerja", "cepat" — e lemah, bukan e keras.'),
-        ("Output", "Satu file audio gabungan, upload ke Clone My Voice di Settings mixFlow."),
+        ("Output", "Satu file audio gabungan, upload ke Clone My Voice di Settings mixFlow Studio."),
     ]
     for label, desc in guidelines:
         pdf.set_font("Sans", "B", 8)
@@ -221,7 +221,7 @@ def main():
     y = pdf.get_y()
     pdf.rect(14, y, 182, 22, 'DF')
     pdf.set_xy(18, y + 3)
-    pdf.cell(174, 5, " Dibuat untuk mixFlow — AI Video Editor for Content Creator Affiliate")
+    pdf.cell(174, 5, " Dibuat untuk mixFlow Studio — AI Video Editor for Content Creator Affiliate")
     pdf.set_xy(18, y + 10)
     pdf.set_font("Sans", "", 7)
     pdf.cell(174, 5, "Upload audio hasil rekaman ke Settings → Clone My Voice. Clone memakan waktu ~1–2 menit.")

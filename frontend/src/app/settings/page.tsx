@@ -139,6 +139,7 @@ export default function SettingsPage() {
       language: newLanguage,
       gender: newGender,
       label: newLabel,
+      hasSample: false,
     };
 
     // Simpan ke backend SQLITE dulu — baru dispatch kalau berhasil
@@ -547,8 +548,8 @@ export default function SettingsPage() {
                   setShowResetConfirm(false);
                   localStorage.removeItem(STORAGE_KEY);
                   dispatch({ type: 'CLEAR_FILES' });
-                  dispatch({ type: 'CLEAR_ANALYSIS' });
-                  dispatch({ type: 'CLEAR_OUTPUTS' });
+                  dispatch({ type: 'CLEAR_ANALYSIS' as any });
+                  dispatch({ type: 'CLEAR_OUTPUTS' as any });
                   addToast('⚡ Semua konfigurasi direset ke default', 'success');
                   window.location.reload();
                 }}

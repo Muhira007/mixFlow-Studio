@@ -1,8 +1,8 @@
 // ============================================
-// mixFlow — Application Constants
+// mixFlow Studio — Application Constants
 // ============================================
 
-export const APP_NAME = 'mixFlow';
+export const APP_NAME = 'mixFlow Studio';
 export const APP_VERSION = '1.0.0';
 export const APP_DESC = 'AI Video Editor for Content Creator Affiliate';
 

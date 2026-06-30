@@ -1,5 +1,5 @@
 """
-mixFlow Backend — Configuration
+mixFlow Studio Backend — Configuration
 Loads from .env file, with sensible defaults for localhost development.
 """
 

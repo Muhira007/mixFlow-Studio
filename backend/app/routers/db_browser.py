@@ -1,5 +1,5 @@
 """
-mixFlow — DB Browser
+mixFlow Studio — DB Browser
 GET /api/db  — Lihat semua isi database (read-only, untuk debugging)
 """
 
@@ -19,7 +19,7 @@ async def browse_db():
 
     html = """<!DOCTYPE html>
 <html lang="id">
-<head><meta charset="utf-8"><title>mixFlow DB Browser</title>
+<head><meta charset="utf-8"><title>mixFlow Studio DB Browser</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:#0a0a14; color:#e0e0e0; font:13px/1.5 system-ui; padding:20px; }
@@ -37,7 +37,7 @@ async def browse_db():
 </style></head>
 <body>
   <button class="refresh" onclick="location.reload()">🔄 Refresh</button>
-  <h1>📦 mixFlow Database Browser</h1>
+  <h1>📦 mixFlow Studio Database Browser</h1>
   <p class="meta">Live view — backend/data/mixflow.db</p>
 """
 

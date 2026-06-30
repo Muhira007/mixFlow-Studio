@@ -97,7 +97,7 @@ export default function QueuePage() {
           dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 45, stepText } });
           currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 45, stepText } : q);
           
-          const result = await generateCaption(job.audio.filename, state.apiKeys.openai);
+          const result = await generateCaption(job.audio.filename, state.apiKeys.openai) as any;
           srt = result.srt;
           srtPath = result.srt_path;
         }
@@ -107,13 +107,13 @@ export default function QueuePage() {
         dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 65, stepText } });
         currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 65, stepText } : q);
         const targetDur = job.audio?.duration || 60;
-        const trimResult = await trimFootage(allResults, targetDur);
+        const trimResult = await trimFootage(allResults, targetDur) as any;
         
         // 4. Concat
         stepText = '🔗 Menyambungkan Mahakarya...';
         dispatch({ type: 'UPDATE_RENDER_QUEUE_JOB', id: job.id, updates: { progress: 80, stepText } });
         currentQueue = currentQueue.map(q => q.id === job.id ? { ...q, progress: 80, stepText } : q);
-        const concatResult = await concatFootage(trimResult.segments, job.fileIds);
+        const concatResult = await concatFootage(trimResult.segments, job.fileIds) as any;
         let videoPath = concatResult.output_path;
 
         // 5. Render
@@ -124,12 +124,12 @@ export default function QueuePage() {
         const h = job.resolution === '720×1280' ? 1280 : 1920;
 
         if (srt && job.audio) {
-          const burnResult = await burnCaption(videoPath, srt, job.audio.filename);
+          const burnResult = await burnCaption(videoPath, srt, job.audio.filename) as any;
           videoPath = burnResult.output_path;
         }
 
         if (job.audio) {
-          const renderRes = await renderVideo(videoPath, job.audio.filename, w, h);
+          const renderRes = await renderVideo(videoPath, job.audio.filename, w, h) as any;
           const outputName = renderRes.output_path.split('/').pop() || 'output.mp4';
           const now = new Date().toISOString();
           
@@ -143,7 +143,7 @@ export default function QueuePage() {
 
           dispatch({
             type: 'ADD_OUTPUT',
-            video: outputData || { name: outputName, duration: job.targetDuration || '—', size: '—', caption: job.caption || '', createdAt: now },
+            video: (outputData || { name: outputName, duration: job.targetDuration || '—', size: '—', caption: job.caption || '', createdAt: now }) as any,
           });
         }
 

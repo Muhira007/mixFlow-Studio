@@ -76,7 +76,7 @@ export default function AboutPage() {
           <section>
             <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">Privasi & Keamanan Data</h2>
             <p>
-              mixFlow dibangun mengutamakan keamanan dan privasi. Aplikasi ini berjalan secara <strong>lokal di komputer Anda</strong>. Semua pengaturan, riwayat naskah, video output, dan kunci API (API Keys) disimpan aman di dalam database SQLite lokal Anda dan tidak dikirimkan ke server kami. API Key Anda hanya digunakan untuk berkomunikasi langsung dengan penyedia layanan AI (seperti OpenAI atau ElevenLabs).
+              mixFlow Studio dibangun mengutamakan keamanan dan privasi. Aplikasi ini berjalan secara <strong>lokal di komputer Anda</strong>. Semua pengaturan, riwayat naskah, video output, dan kunci API (API Keys) disimpan aman di dalam database SQLite lokal Anda dan tidak dikirimkan ke server kami. API Key Anda hanya digunakan untuk berkomunikasi langsung dengan penyedia layanan AI (seperti OpenAI atau ElevenLabs).
             </p>
           </section>
           

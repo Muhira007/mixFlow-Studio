@@ -1,5 +1,5 @@
 """
-mixFlow — Script Generator Router
+mixFlow Studio — Script Generator Router
 POST /api/script/generate  — Generate video script via AI
 """
 

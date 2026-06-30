@@ -79,7 +79,7 @@ export default function EditorPage() {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       name: jobName,
       fileIds: [...state.uploadedFileIds],
-      audio: activeAudio,
+      audio: activeAudio ? { ...activeAudio, duration: 0 } : null,
       resolution: state.outputResolution,
       scriptText: state.scriptText,
       caption,

@@ -1,5 +1,5 @@
 """
-mixFlow — TTS Service (Eleven Labs)
+mixFlow Studio — TTS Service (Eleven Labs)
 Handles: text-to-speech generation + audio duration extraction via FFprobe.
 """
 

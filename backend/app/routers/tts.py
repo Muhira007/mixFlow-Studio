@@ -1,5 +1,5 @@
 """
-mixFlow — TTS Router
+mixFlow Studio — TTS Router
 POST /api/tts/generate     — Generate TTS from text
 POST /api/tts/duration     — Get audio file duration
 GET  /api/tts/audio/{file} — Serve generated audio file

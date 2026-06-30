@@ -1,5 +1,5 @@
 """
-mixFlow — Video Processing Service
+mixFlow Studio — Video Processing Service
 Handles: pre-process (auto-proxy for >1080p), frame analysis, adaptive trim, concat.
 """
 

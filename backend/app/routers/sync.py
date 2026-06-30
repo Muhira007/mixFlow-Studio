@@ -1,5 +1,5 @@
 """
-mixFlow — Sync Router (Global State)
+mixFlow Studio — Sync Router (Global State)
 GET  /api/sync              — Dump entire state
 POST /api/sync/api-key      — Save one API key
 POST /api/sync/setting      — Save one setting

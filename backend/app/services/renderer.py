@@ -1,5 +1,5 @@
 """
-mixFlow — Renderer Service
+mixFlow Studio — Renderer Service
 Handles: final video render (video + audio overlay → output .mp4).
 """
 

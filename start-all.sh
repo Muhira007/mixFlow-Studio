@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================
-# mixFlow — Start All Services
+# mixFlow Studio — Start All Services
 # ============================================
 set -e
 
@@ -42,7 +42,7 @@ mkdir -p "$LOGS_DIR"
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║      mixFlow — Start All Services       ║${NC}"
+echo -e "${CYAN}║      mixFlow Studio — Start All Services       ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
 echo ""
 

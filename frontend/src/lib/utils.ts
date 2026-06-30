@@ -1,5 +1,5 @@
 // ============================================
-// mixFlow — Utility functions
+// mixFlow Studio — Utility functions
 // ============================================
 
 export function cn(...args: (string | undefined | false | null)[]) {

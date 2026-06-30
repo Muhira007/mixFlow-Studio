@@ -1,5 +1,5 @@
 """
-mixFlow — AI Script Generator Service
+mixFlow Studio — AI Script Generator Service
 Handles: script generation via DeepSeek, Google Gemini, or OpenAI.
 """
 

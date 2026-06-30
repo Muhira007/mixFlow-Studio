@@ -1,5 +1,5 @@
 // ============================================
-// mixFlow — API Client
+// mixFlow Studio — API Client
 // Proxy calls to FastAPI backend
 // ============================================
 

@@ -1,6 +1,6 @@
 # 🚀 Product Requirements Document (PRD)
 
-**Nama Proyek:** mixFlow  
+**Nama Proyek:** mixFlow Studio  
 **Jenis:** Web Application — Next.js (Frontend) + FastAPI (Backend)  
 **Deskripsi:** Aplikasi all-in-one untuk content creator affiliate. Menggabungkan AI Script Generator untuk naskah video pendek, Video Editor otomatis dengan Text-to-Speech (TTS), Auto Caption, Auto Cover, dan adaptive trim.
 
@@ -84,7 +84,7 @@ Membuat thumbnail/cover video secara otomatis.
 
 ```mermaid
 flowchart TD
-    A[🎬 User Buka mixFlow] --> B{API Key sudah?}
+    A[🎬 User Buka mixFlow Studio] --> B{API Key sudah?}
     B -- Belum --> S1[Settings: Isi API Key]
     S1 --> S2[Tambah Voice TTS]
     S2 --> C

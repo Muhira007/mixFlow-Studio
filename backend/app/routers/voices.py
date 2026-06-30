@@ -1,5 +1,5 @@
 """
-mixFlow — Voices Router (SQLite-backed)
+mixFlow Studio — Voices Router (SQLite-backed)
 GET    /api/voices              — List all voices
 POST   /api/voices              — Add a voice
 DELETE /api/voices/{id}         — Delete a voice

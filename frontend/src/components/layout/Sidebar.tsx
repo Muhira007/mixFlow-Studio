@@ -46,7 +46,7 @@ export function Sidebar() {
               <span
                 className="bg-gradient-to-r from-[var(--accent)] to-purple-400 bg-clip-text text-transparent leading-none"
               >
-                mixFlow
+                mixFlow Studio
               </span>
               <span className="text-[0.65rem] text-[var(--text-muted)] font-medium mt-1 tracking-wider uppercase">
                 AI Video Editor

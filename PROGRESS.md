@@ -1,4 +1,4 @@
-# 📊 Development Progress — mixFlow
+# 📊 Development Progress — mixFlow Studio
 
 **Proyek dimulai:** 27 Juni 2026  
 **Last update:** 29 Juni 2026 — Release v1.0.0 (Antrean Render & Bulk Process)

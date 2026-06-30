@@ -1,8 +1,8 @@
 @echo off
-title mixFlow - Start All Services
+title mixFlow Studio - Start All Services
 color 0B
 echo ============================================
-echo   mixFlow -- Start via WSL
+echo   mixFlow Studio -- Start via WSL
 echo ============================================
 echo.
 echo Memeriksa &amp; membersihkan port sebelum start...
