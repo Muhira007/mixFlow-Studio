@@ -130,7 +130,7 @@ export function CloneVoice() {
         <input
           type="text"
           className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl
-                     text-[var(--text-primary)] text-sm outline-none transition-all
+                     text-[var(--text-primary)] text-sm outline-hidden transition-all
                      focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
           placeholder="Misal: Suara Gua, Voice Over Andi"
           value={name}

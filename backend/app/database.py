@@ -1,5 +1,5 @@
 """
-mixFlow Studio — SQLite Global Database
+mixFlow Studio — SQLite Global Database via SQLModel
 Persistent storage for ALL app data:
   api_keys, settings, voices, script_history, output_history
 """
@@ -7,14 +7,95 @@ Persistent storage for ALL app data:
 import sqlite3
 import json
 from pathlib import Path
-from typing import Optional
+from datetime import datetime
+from sqlmodel import Field, SQLModel, Session, create_engine, select, delete
 
 DB_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_PATH = DB_DIR / "mixflow.db"
 
+# SQLModel SQLite Connection Engine
+sqlite_url = f"sqlite:///{DB_PATH}"
+connect_args = {"check_same_thread": False}
+engine = create_engine(sqlite_url, connect_args=connect_args)
+
+
+# ============================================
+# SQLMODEL SCHEMAS (Maps to existing tables)
+# ============================================
+
+class APIKey(SQLModel, table=True):
+    __tablename__ = "api_keys"
+    provider: str = Field(primary_key=True)
+    value: str = Field(default="")
+
+
+class Setting(SQLModel, table=True):
+    __tablename__ = "settings"
+    key: str = Field(primary_key=True)
+    value: str
+
+
+class Voice(SQLModel, table=True):
+    __tablename__ = "voices"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    voice_id: str = Field(unique=True, index=True)
+    language: str = Field(default="Indonesia")
+    gender: str = Field(default="Neutral")
+    label: str = Field(default="Narasi")
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+
+class ScriptHistory(SQLModel, table=True):
+    __tablename__ = "script_history"
+    id: str = Field(primary_key=True)
+    script: str
+    caption: str = Field(default="")
+    product_name: str = Field(default="")
+    style: str = Field(default="")
+    duration: str = Field(default="")
+    audience: str = Field(default="")
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+
+class OutputHistory(SQLModel, table=True):
+    __tablename__ = "output_history"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    duration: str = Field(default="")
+    size: str = Field(default="")
+    caption: str = Field(default="")
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+
+class FileRegistry(SQLModel, table=True):
+    __tablename__ = "file_registry"
+    file_id: str = Field(primary_key=True)
+    original_name: str = Field(default="")
+    original_path: str = Field(default="")
+    working_path: str = Field(default="")
+    was_proxied: int = Field(default=0)
+    original_resolution: str = Field(default="")
+
+
+class PipelineState(SQLModel, table=True):
+    __tablename__ = "pipeline_state"
+    key: str = Field(primary_key=True)
+    value: str
+
+
+class CaptionSetting(SQLModel, table=True):
+    __tablename__ = "caption_settings"
+    id: int = Field(default=1, primary_key=True)
+    settings_json: str = Field(default="{}")
+
+
+# ============================================
+# LEGACY RAW SQL CONNECTION FOR OTHER MODULES
+# ============================================
 
 def get_db() -> sqlite3.Connection:
-    """Get a database connection (auto-creates directory)."""
+    """Get a raw sqlite3 connection (retains WAL journal mode and foreign keys)."""
     DB_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
@@ -24,219 +105,156 @@ def get_db() -> sqlite3.Connection:
 
 
 def init_db():
-    """Initialize all database tables."""
-    conn = get_db()
-    conn.executescript("""
-        -- API Keys
-        CREATE TABLE IF NOT EXISTS api_keys (
-            provider TEXT PRIMARY KEY,
-            value TEXT NOT NULL DEFAULT ''
-        );
-
-        -- App Settings
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-
-        -- TTS Voices
-        CREATE TABLE IF NOT EXISTS voices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            voice_id TEXT NOT NULL UNIQUE,
-            language TEXT NOT NULL DEFAULT 'Indonesia',
-            gender TEXT NOT NULL DEFAULT 'Neutral',
-            label TEXT NOT NULL DEFAULT 'Narasi',
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-
-        -- Script History
-        CREATE TABLE IF NOT EXISTS script_history (
-            id TEXT PRIMARY KEY,
-            script TEXT NOT NULL,
-            caption TEXT NOT NULL DEFAULT '',
-            product_name TEXT NOT NULL DEFAULT '',
-            style TEXT NOT NULL DEFAULT '',
-            duration TEXT NOT NULL DEFAULT '',
-            audience TEXT NOT NULL DEFAULT '',
-            created_at TEXT NOT NULL
-        );
-
-        -- Output Video History
-        CREATE TABLE IF NOT EXISTS output_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            duration TEXT NOT NULL DEFAULT '',
-            size TEXT NOT NULL DEFAULT '',
-            caption TEXT DEFAULT '',
-            created_at TEXT NOT NULL
-        );
-
-        -- File Registry (uploaded footage tracking)
-        CREATE TABLE IF NOT EXISTS file_registry (
-            file_id TEXT PRIMARY KEY,
-            original_name TEXT NOT NULL DEFAULT '',
-            original_path TEXT NOT NULL DEFAULT '',
-            working_path TEXT NOT NULL DEFAULT '',
-            was_proxied INTEGER DEFAULT 0,
-            original_resolution TEXT DEFAULT ''
-        );
-
-        -- Pipeline State (save/resume workflow)
-        CREATE TABLE IF NOT EXISTS pipeline_state (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-
-        -- Caption Settings (auto-caption config)
-        CREATE TABLE IF NOT EXISTS caption_settings (
-            id INTEGER PRIMARY KEY DEFAULT 1,
-            settings_json TEXT NOT NULL DEFAULT '{}'
-        );
-    """)
-    conn.commit()
-    conn.close()
-    print(f"📦 Global DB ready: {DB_PATH}")
+    """Initialize all database tables using SQLModel metadata (safe & preserves data)."""
+    DB_DIR.mkdir(parents=True, exist_ok=True)
+    # create_all will only create tables that do not exist yet. Existing tables are preserved.
+    SQLModel.metadata.create_all(engine)
+    print(f"📦 Global DB ready via SQLModel: {DB_PATH}")
 
 
 # ============================================
-# API KEYS
+# API KEYS CRUD
 # ============================================
 
 def get_api_keys() -> dict:
-    conn = get_db()
-    rows = conn.execute("SELECT provider, value FROM api_keys").fetchall()
-    conn.close()
     keys = {"elevenlabs": "", "deepseek": "", "gemini": "", "openai": ""}
-    for r in rows:
-        if r["provider"] in keys:
-            keys[r["provider"]] = r["value"]
+    with Session(engine) as session:
+        rows = session.exec(select(APIKey)).all()
+        for r in rows:
+            if r.provider in keys:
+                keys[r.provider] = r.value
     return keys
 
 
 def set_api_key(provider: str, value: str):
-    conn = get_db()
-    conn.execute(
-        "INSERT OR REPLACE INTO api_keys (provider, value) VALUES (?, ?)",
-        (provider, value),
-    )
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        db_key = session.get(APIKey, provider)
+        if db_key:
+            db_key.value = value
+        else:
+            db_key = APIKey(provider=provider, value=value)
+            session.add(db_key)
+        session.commit()
 
 
 # ============================================
-# SETTINGS
+# SETTINGS CRUD
 # ============================================
 
 def get_settings() -> dict:
-    conn = get_db()
-    rows = conn.execute("SELECT key, value FROM settings").fetchall()
-    conn.close()
-    return {r["key"]: r["value"] for r in rows}
+    with Session(engine) as session:
+        rows = session.exec(select(Setting)).all()
+        return {r.key: r.value for r in rows}
 
 
 def set_setting(key: str, value: str):
-    conn = get_db()
-    conn.execute(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-        (key, value),
-    )
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        db_setting = session.get(Setting, key)
+        if db_setting:
+            db_setting.value = value
+        else:
+            db_setting = Setting(key=key, value=value)
+            session.add(db_setting)
+        session.commit()
 
 
 # ============================================
-# VOICES
+# VOICES CRUD
 # ============================================
 
 def list_voices() -> list[dict]:
-    conn = get_db()
-    rows = conn.execute("SELECT * FROM voices ORDER BY created_at DESC").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with Session(engine) as session:
+        rows = session.exec(select(Voice).order_by(Voice.created_at.desc())).all()
+        return [r.model_dump() for r in rows]
 
 
 def add_voice(name: str, voice_id: str, language: str, gender: str, label: str) -> dict:
-    conn = get_db()
-    try:
-        cur = conn.execute(
-            "INSERT INTO voices (name, voice_id, language, gender, label) VALUES (?, ?, ?, ?, ?)",
-            (name, voice_id, language, gender, label),
+    with Session(engine) as session:
+        existing = session.exec(select(Voice).where(Voice.voice_id == voice_id)).first()
+        if existing:
+            raise ValueError(f"Voice ID '{voice_id}' sudah ada")
+        
+        voice = Voice(
+            name=name,
+            voice_id=voice_id,
+            language=language,
+            gender=gender,
+            label=label
         )
-        conn.commit()
-        row = conn.execute("SELECT * FROM voices WHERE id = ?", (cur.lastrowid,)).fetchone()
-        return dict(row)
-    except sqlite3.IntegrityError:
-        conn.close()
-        raise ValueError(f"Voice ID '{voice_id}' sudah ada")
-    finally:
-        conn.close()
+        session.add(voice)
+        session.commit()
+        session.refresh(voice)
+        return voice.model_dump()
 
 
 def delete_voice(voice_id: str) -> bool:
-    conn = get_db()
-    cur = conn.execute("DELETE FROM voices WHERE voice_id = ?", (voice_id,))
-    conn.commit()
-    deleted = cur.rowcount > 0
-    conn.close()
-    return deleted
+    with Session(engine) as session:
+        voice = session.exec(select(Voice).where(Voice.voice_id == voice_id)).first()
+        if voice:
+            session.delete(voice)
+            session.commit()
+            return True
+        return False
 
 
 # ============================================
-# SCRIPT HISTORY
+# SCRIPT HISTORY CRUD
 # ============================================
 
 def list_scripts(limit: int = 20) -> list[dict]:
-    conn = get_db()
-    rows = conn.execute(
-        "SELECT * FROM script_history ORDER BY created_at DESC LIMIT ?", (limit,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with Session(engine) as session:
+        rows = session.exec(select(ScriptHistory).order_by(ScriptHistory.created_at.desc()).limit(limit)).all()
+        return [r.model_dump() for r in rows]
 
 
 def add_script(script: dict) -> dict:
-    conn = get_db()
-    conn.execute(
-        """INSERT OR REPLACE INTO script_history
-           (id, script, caption, product_name, style, duration, audience, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (
-            script["id"], script["script"], script["caption"],
-            script["product_name"], script["style"], script["duration"],
-            script["audience"], script["created_at"],
-        ),
-    )
-    conn.commit()
-    conn.close()
-    return script
+    with Session(engine) as session:
+        db_script = session.get(ScriptHistory, script["id"])
+        if db_script:
+            db_script.script = script["script"]
+            db_script.caption = script.get("caption", "")
+            db_script.product_name = script.get("product_name", "")
+            db_script.style = script.get("style", "")
+            db_script.duration = script.get("duration", "")
+            db_script.audience = script.get("audience", "")
+            db_script.created_at = script["created_at"]
+        else:
+            db_script = ScriptHistory(
+                id=script["id"],
+                script=script["script"],
+                caption=script.get("caption", ""),
+                product_name=script.get("product_name", ""),
+                style=script.get("style", ""),
+                duration=script.get("duration", ""),
+                audience=script.get("audience", ""),
+                created_at=script["created_at"]
+            )
+            session.add(db_script)
+        session.commit()
+        return script
 
 
 def delete_script(script_id: str) -> bool:
-    conn = get_db()
-    cur = conn.execute("DELETE FROM script_history WHERE id = ?", (script_id,))
-    conn.commit()
-    deleted = cur.rowcount > 0
-    conn.close()
-    return deleted
+    with Session(engine) as session:
+        db_script = session.get(ScriptHistory, script_id)
+        if db_script:
+            session.delete(db_script)
+            session.commit()
+            return True
+        return False
 
 
 # ============================================
-# OUTPUT HISTORY
+# OUTPUT HISTORY CRUD
 # ============================================
 
 def list_outputs(limit: int = 50) -> list[dict]:
-    conn = get_db()
-    rows = conn.execute(
-        "SELECT * FROM output_history ORDER BY created_at DESC LIMIT ?", (limit,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with Session(engine) as session:
+        rows = session.exec(select(OutputHistory).order_by(OutputHistory.created_at.desc()).limit(limit)).all()
+        return [r.model_dump() for r in rows]
 
 
 def add_output(video: dict) -> dict:
-    conn = get_db()
-    
     size_str = video.get("size", "")
     if size_str in ("", "—"):
         from app.config import OUTPUTS_DIR
@@ -245,113 +263,124 @@ def add_output(video: dict) -> dict:
             size_mb = filepath.stat().st_size / (1024 * 1024)
             size_str = f"{size_mb:.1f} MB"
 
-    cur = conn.execute(
-        "INSERT INTO output_history (name, duration, size, caption, created_at) VALUES (?, ?, ?, ?, ?)",
-        (video["name"], video.get("duration", ""), size_str, video.get("caption", ""), video["created_at"]),
-    )
-    conn.commit()
-    row = conn.execute("SELECT * FROM output_history WHERE id = ?", (cur.lastrowid,)).fetchone()
-    conn.close()
-    return dict(row)
+    with Session(engine) as session:
+        db_output = OutputHistory(
+            name=video["name"],
+            duration=video.get("duration", ""),
+            size=size_str,
+            caption=video.get("caption", ""),
+            created_at=video["created_at"]
+        )
+        session.add(db_output)
+        session.commit()
+        session.refresh(db_output)
+        return db_output.model_dump()
 
 
 def delete_output(output_id: int) -> bool:
-    conn = get_db()
-    row = conn.execute("SELECT name FROM output_history WHERE id = ?", (output_id,)).fetchone()
-    if row:
-        import os
-        from app.config import OUTPUTS_DIR
-        filepath = OUTPUTS_DIR / row["name"]
-        if filepath.exists():
-            try:
-                filepath.unlink()
-            except Exception:
-                pass
-    cur = conn.execute("DELETE FROM output_history WHERE id = ?", (output_id,))
-    conn.commit()
-    deleted = cur.rowcount > 0
-    conn.close()
-    return deleted
+    with Session(engine) as session:
+        db_output = session.get(OutputHistory, output_id)
+        if db_output:
+            import os
+            from app.config import OUTPUTS_DIR
+            filepath = OUTPUTS_DIR / db_output.name
+            if filepath.exists():
+                try:
+                    filepath.unlink()
+                except Exception:
+                    pass
+            session.delete(db_output)
+            session.commit()
+            return True
+        return False
 
 
 def clear_output_history():
-    conn = get_db()
-    conn.execute("DELETE FROM output_history")
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        session.exec(delete(OutputHistory))
+        session.commit()
 
 
 # ============================================
-# FILE REGISTRY — uploaded footage tracking
+# FILE REGISTRY CRUD
 # ============================================
 
 def add_file_record(fid: str, name: str, orig: str, work: str, proxied: bool, res: str):
-    conn = get_db()
-    conn.execute(
-        "INSERT OR REPLACE INTO file_registry (file_id, original_name, original_path, working_path, was_proxied, original_resolution) VALUES (?,?,?,?,?,?)",
-        (fid, name, orig, work, 1 if proxied else 0, res),
-    )
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        record = session.get(FileRegistry, fid)
+        if record:
+            record.original_name = name
+            record.original_path = orig
+            record.working_path = work
+            record.was_proxied = 1 if proxied else 0
+            record.original_resolution = res
+        else:
+            record = FileRegistry(
+                file_id=fid,
+                original_name=name,
+                original_path=orig,
+                working_path=work,
+                was_proxied=1 if proxied else 0,
+                original_resolution=res
+            )
+            session.add(record)
+        session.commit()
 
 
 def get_file_record(fid: str) -> dict | None:
-    conn = get_db()
-    row = conn.execute("SELECT * FROM file_registry WHERE file_id = ?", (fid,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    with Session(engine) as session:
+        record = session.get(FileRegistry, fid)
+        return record.model_dump() if record else None
 
 
 def list_file_records() -> list[dict]:
-    conn = get_db()
-    rows = conn.execute("SELECT * FROM file_registry ORDER BY file_id").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with Session(engine) as session:
+        rows = session.exec(select(FileRegistry).order_by(FileRegistry.file_id)).all()
+        return [r.model_dump() for r in rows]
 
 
 def clear_file_records():
-    conn = get_db()
-    conn.execute("DELETE FROM file_registry")
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        session.exec(delete(FileRegistry))
+        session.commit()
 
 
 # ============================================
-# PIPELINE STATE — save/resume workflow
+# PIPELINE STATE CRUD
 # ============================================
 
 def get_pipeline_state() -> dict:
-    conn = get_db()
-    rows = conn.execute("SELECT key, value FROM pipeline_state").fetchall()
-    conn.close()
-    state = {}
-    for r in rows:
-        try:
-            state[r["key"]] = json.loads(r["value"])
-        except (json.JSONDecodeError, TypeError):
-            state[r["key"]] = r["value"]
-    return state
+    with Session(engine) as session:
+        rows = session.exec(select(PipelineState)).all()
+        state = {}
+        for r in rows:
+            try:
+                state[r.key] = json.loads(r.value)
+            except (json.JSONDecodeError, TypeError):
+                state[r.key] = r.value
+        return state
 
 
 def set_pipeline_state(key: str, value):
-    conn = get_db()
-    conn.execute(
-        "INSERT OR REPLACE INTO pipeline_state (key, value) VALUES (?, ?)",
-        (key, json.dumps(value) if not isinstance(value, str) else value),
-    )
-    conn.commit()
-    conn.close()
+    val_str = json.dumps(value) if not isinstance(value, str) else value
+    with Session(engine) as session:
+        db_state = session.get(PipelineState, key)
+        if db_state:
+            db_state.value = val_str
+        else:
+            db_state = PipelineState(key=key, value=val_str)
+            session.add(db_state)
+        session.commit()
 
 
 def clear_pipeline_state():
-    conn = get_db()
-    conn.execute("DELETE FROM pipeline_state")
-    conn.commit()
-    conn.close()
+    with Session(engine) as session:
+        session.exec(delete(PipelineState))
+        session.commit()
 
 
 # ============================================
-# FULL SYNC — dump entire state
+# FULL DUMP & SYNC UTILS
 # ============================================
 
 def _voice_has_sample(voice_id: str) -> bool:

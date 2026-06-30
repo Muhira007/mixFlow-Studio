@@ -172,7 +172,7 @@ export default function AutoCoverPage() {
               
               <select
                 className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg
-                          px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] mb-2"
+                          px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] mb-2"
                 value={settings.title_style}
                 onChange={(e) => update({ title_style: e.target.value })}
               >

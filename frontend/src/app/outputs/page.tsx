@@ -97,7 +97,7 @@ export default function OutputsPage() {
           </div>
         </div>
         <div className="flex gap-3 flex-wrap items-center">
-          <span className="text-[var(--text-muted)] text-[0.85rem] whitespace-nowrap font-medium px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border)] shadow-sm">
+          <span className="text-[var(--text-muted)] text-[0.85rem] whitespace-nowrap font-medium px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border)] shadow-xs">
             Total: <strong className="text-[var(--text-primary)]">{state.outputHistory.length}</strong> video
           </span>
         </div>
@@ -152,7 +152,7 @@ export default function OutputsPage() {
                       </td>
                       <td className="py-4 px-5 text-center">
                         <div 
-                          className="w-16 h-16 mx-auto bg-black rounded-lg overflow-hidden relative cursor-pointer group/thumb shadow-sm ring-1 ring-[var(--border)] hover:ring-[var(--accent)] transition-all"
+                          className="w-16 h-16 mx-auto bg-black rounded-lg overflow-hidden relative cursor-pointer group/thumb shadow-xs ring-1 ring-[var(--border)] hover:ring-[var(--accent)] transition-all"
                           onClick={() => setPreviewVideo(item.name)}
                         >
                           <video 

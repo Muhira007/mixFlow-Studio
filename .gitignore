@@ -37,6 +37,9 @@ backend/data/
 # Logs
 logs/
 
+# Build reference (local only)
+build2026.md
+
 # Next.js build
 .next/
 

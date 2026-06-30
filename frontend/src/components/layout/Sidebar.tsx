@@ -56,7 +56,7 @@ export function Sidebar() {
           
           {/* Close button (Mobile only) */}
           <button
-            className="hidden max-md:flex absolute top-6 right-4 w-8 h-8 items-center justify-center rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--danger)] hover:text-white hover:border-[var(--danger)] transition-all shadow-sm"
+            className="hidden max-md:flex absolute top-6 right-4 w-8 h-8 items-center justify-center rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--danger)] hover:text-white hover:border-[var(--danger)] transition-all shadow-xs"
             onClick={() => {
               document.getElementById('sidebar')?.removeAttribute('data-open');
               document.getElementById('sidebar-overlay')?.removeAttribute('data-open');
@@ -87,13 +87,13 @@ export function Sidebar() {
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-300 text-sm font-medium border relative select-none no-underline min-h-[44px] group overflow-hidden',
                   isActive
                     ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)] hover:brightness-110'
-                    : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-sm'
+                    : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-xs'
                 )}
               >
                 <span className={cn("text-lg w-6 text-center shrink-0 transition-transform duration-300", !isActive && "group-hover:scale-110")}>{item.icon}</span>
                 <span className="relative z-10">{item.label}</span>
                 {item.badge && (
-                  <span className={cn("ml-auto text-[0.65rem] px-2 py-0.5 rounded-full font-bold z-10 shadow-sm", isActive ? "bg-white/20 text-white" : "bg-[var(--accent)] text-white")}>
+                  <span className={cn("ml-auto text-[0.65rem] px-2 py-0.5 rounded-full font-bold z-10 shadow-xs", isActive ? "bg-white/20 text-white" : "bg-[var(--accent)] text-white")}>
                     {item.badge}
                   </span>
                 )}
@@ -119,7 +119,7 @@ export function Sidebar() {
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-300 text-sm font-medium border relative select-none no-underline min-h-[44px] group overflow-hidden',
                   isActive
                     ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 text-white border-transparent shadow-[0_4px_15px_var(--accent-glow)] hover:brightness-110'
-                    : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-sm'
+                    : 'text-[var(--text-secondary)] border-transparent hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] hover:border-[var(--border)]/80 hover:shadow-xs'
                 )}
               >
                 <span className={cn("text-lg w-6 text-center shrink-0 transition-transform duration-300", !isActive && "group-hover:scale-110")}>{item.icon}</span>
@@ -132,7 +132,7 @@ export function Sidebar() {
         {/* Premium Footer Status */}
         <div className="p-4 border-t border-[var(--border)]/50 shrink-0 bg-[var(--bg-primary)]">
           <Link href="/settings" className="block no-underline">
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3 flex items-center gap-3 hover:border-[var(--accent)]/50 transition-colors group cursor-pointer shadow-sm relative overflow-hidden">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3 flex items-center gap-3 hover:border-[var(--accent)]/50 transition-colors group cursor-pointer shadow-xs relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               
               <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-inner", state.apiKeys.elevenlabs ? "bg-[var(--success)]/10 text-[var(--success)]" : "bg-yellow-500/10 text-yellow-500")}>
@@ -144,7 +144,7 @@ export function Sidebar() {
                   API Status
                 </p>
                 <p className="text-[0.65rem] text-[var(--text-muted)] truncate mt-0.5 flex items-center gap-1.5">
-                  <span className={cn("w-1.5 h-1.5 rounded-full shadow-sm", state.apiKeys.elevenlabs ? "bg-[var(--success)] shadow-[var(--success)]" : "bg-yellow-500 shadow-yellow-500 animate-pulse")} />
+                  <span className={cn("w-1.5 h-1.5 rounded-full shadow-xs", state.apiKeys.elevenlabs ? "bg-[var(--success)] shadow-[var(--success)]" : "bg-yellow-500 shadow-yellow-500 animate-pulse")} />
                   {state.apiKeys.elevenlabs ? 'Connected' : 'Missing Keys'}
                 </p>
               </div>

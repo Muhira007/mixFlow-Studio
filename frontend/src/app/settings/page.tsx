@@ -350,20 +350,20 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3 mb-3">
                   <input
                     type="text"
-                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent)] transition-all"
+                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-hidden focus:border-[var(--accent)] transition-all"
                     placeholder="Nama (contoh: Bram, Senja)"
                     value={newVoiceName}
                     onChange={(e) => setNewVoiceName(e.target.value)}
                   />
                   <input
                     type="text"
-                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent)] transition-all"
+                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-hidden focus:border-[var(--accent)] transition-all"
                     placeholder="ElevenLabs Voice ID"
                     value={newVoiceId}
                     onChange={(e) => setNewVoiceId(e.target.value)}
                   />
                   <select
-                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent)] transition-all cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-hidden focus:border-[var(--accent)] transition-all cursor-pointer"
                     value={newLanguage}
                     onChange={(e) => setNewLanguage(e.target.value)}
                   >
@@ -373,7 +373,7 @@ export default function SettingsPage() {
                     <option value="Other">🌐 Other</option>
                   </select>
                   <select
-                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent)] transition-all cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm outline-hidden focus:border-[var(--accent)] transition-all cursor-pointer"
                     value={newGender}
                     onChange={(e) => setNewGender(e.target.value)}
                   >
@@ -465,7 +465,7 @@ export default function SettingsPage() {
                           ) : (
                             <>
                               <button
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all shadow-sm ${
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all shadow-xs ${
                                   !hasSample ? 'opacity-30 pointer-events-none bg-[var(--bg-primary)] text-[var(--text-muted)] border border-[var(--border)]' :
                                   isPlaying
                                     ? 'bg-[var(--accent)] text-white border border-[var(--accent)]'
@@ -477,7 +477,7 @@ export default function SettingsPage() {
                               >
                                 {isPlaying ? '⏹' : '▶'}
                               </button>
-                              <label className="w-8 h-8 rounded-lg flex items-center justify-center text-sm cursor-pointer transition-all shadow-sm bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-[var(--accent)] border border-[var(--border)]" title={blobExists ? 'Ganti sample audio' : 'Upload sample audio'}>
+                              <label className="w-8 h-8 rounded-lg flex items-center justify-center text-sm cursor-pointer transition-all shadow-xs bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-[var(--accent)] border border-[var(--border)]" title={blobExists ? 'Ganti sample audio' : 'Upload sample audio'}>
                                 {blobExists ? '🔄' : '📂'}
                                 <input type="file" accept="audio/*" className="hidden" onChange={(e) => {
                                   const file = e.target.files?.[0];

@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-input: var(--bg-input);
+  --color-border-theme: var(--border);
+  --color-border-focus: var(--border-focus);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-glow: var(--accent-glow);
+  --color-accent-2: var(--accent-2);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --color-bg-toast: var(--bg-toast);
+  --color-text-toast: var(--text-toast);
+  --color-border-toast: var(--border-toast);
+
+  --spacing-sidebar: var(--sidebar-width);
+  --spacing-topbar: var(--topbar-height);
+  --spacing-bottomnav: var(--bottomnav-height);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+}
+
 /* ========================================
    mixFlow Studio — Dark Theme Design System
    Based on contoh-layout mockup

@@ -45,7 +45,7 @@ export function ThemeToggle() {
           )}
         >
           {theme === opt.value && (
-            <div className="absolute inset-0 bg-[var(--bg-card)] rounded-lg shadow-sm border border-[var(--border)] -z-10 transition-all duration-300" />
+            <div className="absolute inset-0 bg-[var(--bg-card)] rounded-lg shadow-xs border border-[var(--border)] -z-10 transition-all duration-300" />
           )}
           <opt.icon size={14} className={cn("transition-transform duration-300", theme === opt.value && "scale-110")} />
         </button>

@@ -140,7 +140,7 @@ export function ScriptTextarea() {
               )}
             </div>
             <textarea
-              className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit resize-y min-h-[110px] leading-relaxed outline-none transition-all"
+              className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit resize-y min-h-[110px] leading-relaxed outline-hidden transition-all"
               placeholder="Tempel naskah dari Script Generator di sini..."
               value={state.scriptText}
               onChange={(e) => dispatch({ type: 'SET_SCRIPT_TEXT', text: e.target.value })}
@@ -154,7 +154,7 @@ export function ScriptTextarea() {
               </label>
               <div className="flex gap-1.5 mb-3">
                 <select
-                  className="flex-1 px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer appearance-none"
+                  className="flex-1 px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer appearance-none"
                   value={state.selectedVoice}
                   onChange={(e) => dispatch({ type: 'SET_VOICE', voice: e.target.value })}
                 >
@@ -169,7 +169,7 @@ export function ScriptTextarea() {
                     type="button"
                     className={`shrink-0 px-3 rounded-lg text-xs font-semibold transition-all ${
                       isPlaying
-                        ? 'bg-[var(--accent)] text-white shadow-sm'
+                        ? 'bg-[var(--accent)] text-white shadow-xs'
                         : 'bg-[var(--accent)]/10 border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'
                     }`}
                     onClick={handlePlayPreview}

@@ -179,7 +179,7 @@ async def _generate_openai(
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.8,
-        "max_tokens": 2000,
+        "max_completion_tokens": 2000,
     }
 
     async with httpx.AsyncClient(timeout=60.0) as client:

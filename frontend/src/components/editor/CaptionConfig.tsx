@@ -84,7 +84,7 @@ export function CaptionConfig() {
           </label>
           <select
             className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg
-                       px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none
+                       px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-hidden
                        focus:border-[var(--accent)]"
             value={settings.font}
             onChange={(e) => save({ font: e.target.value })}

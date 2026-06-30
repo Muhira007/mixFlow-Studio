@@ -2,7 +2,7 @@
 
 **mixFlow Studio** adalah aplikasi all-in-one untuk content creator affiliate: menggabungkan **AI Script Generator** (naskah voice-over otomatis) dengan **Video Editor** (TTS + trim + render) dalam satu workflow.
 
-![Status](https://img.shields.io/badge/status-stable_v1.0.0-purple) ![Next.js](https://img.shields.io/badge/Next.js-16.2-black) ![FastAPI](https://img.shields.io/badge/FastAPI-0.49-teal) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![SQLite](https://img.shields.io/badge/DB-SQLite-orange)
+![Status](https://img.shields.io/badge/status-stable_v1.0.0-purple) ![Next.js](https://img.shields.io/badge/Next.js-16.2-black) ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-teal) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![SQLModel](https://img.shields.io/badge/ORM-SQLModel-blue) ![SQLite](https://img.shields.io/badge/DB-SQLite-orange)
 
 ---
 
@@ -85,8 +85,8 @@ mixflow/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI entry point
-│   │   ├── config.py            # Environment config
-│   │   ├── database.py          # SQLite CRUD operations
+│   │   ├── config.py            # Environment config (Pydantic Settings)
+│   │   ├── database.py          # SQLite CRUD operations via SQLModel ORM
 │   │   ├── routers/
 │   │   │   ├── tts.py           # TTS generate + audio upload + library
 │   │   │   ├── script.py        # AI script generator

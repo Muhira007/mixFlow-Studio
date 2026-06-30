@@ -1,8 +1,20 @@
 # 📊 Development Progress — mixFlow Studio
 
 **Proyek dimulai:** 27 Juni 2026  
-**Last update:** 29 Juni 2026 — Release v1.0.0 (Antrean Render & Bulk Process)
+**Last update:** 30 Juni 2026 — Refactoring & Modernisasi (Pydantic Settings, SQLModel, Tailwind v4 @theme)  
 **Status:** 🟢 Stable v1.0.0 — Backend + Frontend Fungsional, Auto Caption & Auto Cover, Render Queue Siap
+
+---
+
+## ✅ Selesai (30 Juni 2026)
+
+### Sisi Backend (FastAPI)
+- [x] Refaktor [config.py](file:///home/kangdemuh/aplikasi/mixflow/backend/app/config.py) menggunakan `pydantic-settings` (`BaseSettings`) untuk validasi konfigurasi dan env vars yang aman secara tipe data (type-safe).
+- [x] Merefaktor [database.py](file:///home/kangdemuh/aplikasi/mixflow/backend/app/database.py) ke ORM modern **SQLModel** untuk query SQLite yang type-safe, seraya mempertahankan fungsionalitas `get_db()` lama untuk kompatibilitas mundur.
+- [x] Menambahkan dependensi `sqlmodel` pada [requirements.txt](file:///home/kangdemuh/aplikasi/mixflow/backend/requirements.txt).
+
+### Sisi Frontend (Next.js & Tailwind CSS)
+- [x] Mengintegrasikan custom design tokens ke dalam direktif `@theme` di [globals.css](file:///home/kangdemuh/aplikasi/mixflow/frontend/src/app/globals.css) bawaan Tailwind CSS v4, memungkinkan pemakaian utilitas class bertema (contoh: `bg-bg-primary`, `text-accent`) secara native.
 
 ---
 

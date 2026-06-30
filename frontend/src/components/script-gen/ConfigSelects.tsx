@@ -30,7 +30,7 @@ export function ConfigSelects({
             AI Provider
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={provider}
             onChange={(e) => onProviderChange(e.target.value)}
           >
@@ -45,7 +45,7 @@ export function ConfigSelects({
             Durasi Video
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={duration}
             onChange={(e) => onDurationChange(e.target.value)}
           >
@@ -62,7 +62,7 @@ export function ConfigSelects({
             Gaya Bahasa
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={style}
             onChange={(e) => onStyleChange(e.target.value)}
           >
@@ -77,7 +77,7 @@ export function ConfigSelects({
             Target Audiens
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={audience}
             onChange={(e) => onAudienceChange(e.target.value)}
           >

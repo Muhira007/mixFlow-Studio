@@ -168,7 +168,7 @@ export function UploadZone() {
           <div className="flex items-center gap-2">
             <span className="text-[0.65rem] text-[var(--text-muted)]">Urutkan:</span>
             <select
-              className="text-[0.65rem] px-2 py-1 bg-[var(--bg-input)] border border-[var(--border)] rounded-md text-[var(--text-primary)] outline-none cursor-pointer"
+              className="text-[0.65rem] px-2 py-1 bg-[var(--bg-input)] border border-[var(--border)] rounded-md text-[var(--text-primary)] outline-hidden cursor-pointer"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortMode)}
             >

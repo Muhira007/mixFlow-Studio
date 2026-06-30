@@ -25,7 +25,7 @@ export function VideoSettings({
           </label>
           <input
             type="number"
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all"
             value={minKeepDuration}
             min={1}
             max={10}
@@ -42,7 +42,7 @@ export function VideoSettings({
             Output Format
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={outputFormat}
             onChange={(e) => onFormatChange(e.target.value)}
           >
@@ -57,7 +57,7 @@ export function VideoSettings({
             Video Codec
           </label>
           <select
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all cursor-pointer"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all cursor-pointer"
             value={videoCodec}
             onChange={(e) => onCodecChange(e.target.value)}
           >

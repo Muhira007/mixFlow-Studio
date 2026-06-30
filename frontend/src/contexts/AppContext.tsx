@@ -524,6 +524,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [state.scriptText, state.selectedVoice, state.scriptSource, state.outputResolution, state.uploadedFileMeta]);
 
+  // Cleanup blob URLs saat unmount — cegah memory leak
+  const audioSamplesRef = useRef(state.audioSamples);
+  audioSamplesRef.current = state.audioSamples;
+
+  useEffect(() => {
+    return () => {
+      Object.values(audioSamplesRef.current).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          try { URL.revokeObjectURL(url); } catch {}
+        }
+      });
+    };
+  }, []);
+
   const addToast = useCallback((message: string, type: ToastType = 'success') => {
     dispatch({ type: 'ADD_TOAST', toast: { message, type } });
   }, []);

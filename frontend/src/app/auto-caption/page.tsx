@@ -118,7 +118,7 @@ export default function AutoCaptionPage() {
                 </label>
                 <select
                   className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg
-                            px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                            px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)]"
                   value={settings.font}
                   onChange={(e) => update({ font: e.target.value })}
                 >
@@ -244,7 +244,7 @@ export default function AutoCaptionPage() {
                     type="number" 
                     value={settings.social_max_words} 
                     onChange={(e) => update({ social_max_words: parseInt(e.target.value) || 40 })}
-                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-none"
+                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-hidden"
                   />
                   <div className="text-[0.65rem] text-[var(--text-muted)] mt-1.5">Caption utama (default: 40)</div>
                 </div>
@@ -254,7 +254,7 @@ export default function AutoCaptionPage() {
                     type="number" 
                     value={settings.social_hashtags} 
                     onChange={(e) => update({ social_hashtags: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-none"
+                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-hidden"
                   />
                   <div className="text-[0.65rem] text-[var(--text-muted)] mt-1.5">0 = tanpa hashtag (default: 5)</div>
                 </div>
@@ -263,7 +263,7 @@ export default function AutoCaptionPage() {
                   <select 
                     value={settings.social_tone} 
                     onChange={(e) => update({ social_tone: e.target.value })}
-                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-none"
+                    className="w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] outline-hidden"
                   >
                     <option value="Storytelling (Bercerita)">Storytelling (Bercerita)</option>
                     <option value="Santai & Gaul (Gen-Z)">Santai & Gaul (Gen-Z)</option>

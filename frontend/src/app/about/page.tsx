@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div className="animate-fade-slide-in space-y-6">
         
         {/* Header */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8 max-md:p-6 shadow-sm relative overflow-hidden">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8 max-md:p-6 shadow-xs relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-gradient-to-br from-[var(--accent)] to-purple-600 rounded-full blur-3xl opacity-20 pointer-events-none" />
           
           <div className="flex items-center gap-5">
@@ -28,7 +28,7 @@ export default function AboutPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8 max-md:p-6 shadow-sm text-[var(--text-secondary)] leading-relaxed space-y-6">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8 max-md:p-6 shadow-xs text-[var(--text-secondary)] leading-relaxed space-y-6">
           <section>
             <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">Tentang Aplikasi</h2>
             <p>

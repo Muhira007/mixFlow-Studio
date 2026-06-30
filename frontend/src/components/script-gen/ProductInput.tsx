@@ -25,7 +25,7 @@ export function ProductInput({
           type="button"
           className={`flex-1 px-3 py-2 text-xs font-semibold rounded-md transition-all ${
             mode === 'name'
-              ? 'bg-[var(--accent)] text-white shadow-sm'
+              ? 'bg-[var(--accent)] text-white shadow-xs'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
           onClick={() => onModeChange('name')}
@@ -36,7 +36,7 @@ export function ProductInput({
           type="button"
           className={`flex-1 px-3 py-2 text-xs font-semibold rounded-md transition-all ${
             mode === 'url'
-              ? 'bg-[var(--accent)] text-white shadow-sm'
+              ? 'bg-[var(--accent)] text-white shadow-xs'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
           onClick={() => onModeChange('url')}
@@ -53,7 +53,7 @@ export function ProductInput({
           </label>
           <input
             type="text"
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all"
             placeholder="Contoh: GlowSkin Niacinamide Serum 30ml"
             value={productName}
             onChange={(e) => onNameChange(e.target.value)}
@@ -69,7 +69,7 @@ export function ProductInput({
           </label>
           <input
             type="url"
-            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all"
+            className="w-full px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all"
             placeholder="https://tokopedia.com/produk/xxx"
             value={productUrl}
             onChange={(e) => onUrlChange(e.target.value)}

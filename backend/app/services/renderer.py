@@ -66,7 +66,6 @@ def render_final(
         ])
     else:
         cmd.extend([
-            "-c:v", "libx264", # Will be mapped normally if no filter
             "-map", "0:v",
             "-map", "1:a",
         ])

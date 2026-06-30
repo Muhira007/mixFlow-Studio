@@ -36,7 +36,7 @@ export function ApiKeyInput({ title, icon, fields, values, onChange }: Props) {
               />
               <input
                 type="password"
-                className="flex-1 px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-none transition-all"
+                className="flex-1 px-3 py-2.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm font-inherit outline-hidden transition-all"
                 placeholder={f.placeholder}
                 value={values[f.id] || ''}
                 onChange={(e) => onChange(f.id, e.target.value)}

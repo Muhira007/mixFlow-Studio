@@ -25,7 +25,7 @@ export function Topbar() {
     <header className="h-16 border-b border-[var(--border)] flex items-center px-6 max-md:px-4 gap-4 bg-[var(--bg-primary)]/80 backdrop-blur-xl sticky top-0 z-40 shrink-0">
       {/* Hamburger */}
       <button
-        className="hidden max-md:flex w-9 h-9 items-center justify-center bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--bg-card)] transition-all rounded-lg shrink-0 p-0 shadow-sm"
+        className="hidden max-md:flex w-9 h-9 items-center justify-center bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--bg-card)] transition-all rounded-lg shrink-0 p-0 shadow-xs"
         onClick={() => {
           const sidebar = document.getElementById('sidebar');
           const overlay = document.getElementById('sidebar-overlay');

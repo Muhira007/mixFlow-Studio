@@ -32,3 +32,7 @@ Pillow>=10.0
 # File utils
 aiofiles==24.1.*
 python-multipart==0.0.*
+
+# Database ORM
+sqlmodel==0.0.*
+
