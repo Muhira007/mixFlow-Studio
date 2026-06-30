@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Voice Clone Script - Indonesian</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fcfcfc;
+            --surface: #ffffff;
+            --surface-hover: #f9fafb;
+            --primary: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.2);
+            --accent: #7c3aed;
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --border: #e5e7eb;
+            --tip-bg: #fffbeb;
+            --tip-border: #f59e0b;
+            --tip-text: #92400e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.05), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding-top: 2rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #1e3a8a, #5b21b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .guide-card {
+            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+        }
+
+        .guide-card h2 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .guide-item strong {
+            display: block;
+            color: #6b7280;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.2s; }
+        .section:nth-child(4) { animation-delay: 0.3s; }
+        .section:nth-child(5) { animation-delay: 0.4s; }
+        .section:nth-child(6) { animation-delay: 0.5s; }
+        .section:nth-child(7) { animation-delay: 0.6s; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-number {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .script-box {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 2rem;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .script-box:hover {
+            background-color: var(--surface-hover);
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .script-line {
+            margin-bottom: 0.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .script-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .annotation {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tip-box {
+            background-color: var(--tip-bg);
+            border-left: 4px solid var(--tip-border);
+            padding: 1rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: var(--tip-text);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .tip-box svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            color: var(--tip-border);
+        }
+
+        mark {
+            background-color: rgba(124, 58, 237, 0.15);
+            color: #4c1d95;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .footer {
+            margin-top: 5rem;
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2.2rem; }
+            .script-box { padding: 1.5rem; font-size: 1.05rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Advanced Voice Clone Script</h1>
+        <p>Skrip komprehensif untuk melatih model AI Text-to-Speech & Voice-to-Voice dengan menangkap seluruh spektrum artikulasi, dinamika, dan emosi bahasa Indonesia.</p>
+    </header>
+
+    <div class="guide-card">
+        <h2>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+            Panduan Rekaman Masterclass
+        </h2>
+        <div class="guide-grid">
+            <div class="guide-item">
+                <strong>Tujuan Skrip</strong>
+                Memastikan AI mengenali perbedaan halus (mikro-ekspresi, e pepet/keras, intonasi kompleks).
+            </div>
+            <div class="guide-item">
+                <strong>Postur & Jarak</strong>
+                Berdiri atau duduk tegak. Jarak mic 15-20cm. Gunakan pop-filter untuk menghindari suara hembusan (plosif).
+            </div>
+            <div class="guide-item">
+                <strong>Teknik Jeda (Pacing)</strong>
+                Jangan terburu-buru. Berikan jeda 1-2 detik antar kalimat. Biarkan AI mempelajari napas alami Anda.
+            </div>
+            <div class="guide-item">
+                <strong>Eksekusi Emosi</strong>
+                Jangan setengah-setengah. Jika skrip meminta marah, keluarkan energi marah. AI butuh data ekstrem untuk jangkauan dinamis.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">01</div>
+            <h3 class="section-title">Artikulasi Ekstrem (Vokal & Konsonan Kompleks)</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                <span class="annotation">E Pepet & E Keras Bertumpuk</span>
+                Mereka <mark>bersepakat</mark> untuk <mark>menyelesaikan</mark> perdebatan mengenai <mark>kemeja</mark> dan <mark>sepatu</mark> <mark>merek</mark> lokal di <mark>Kementerian</mark> <mark>Kesehatan</mark>.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Konsonan Rangkap & Diftong</span>
+                <mark>Syarat</mark> dan ketentuan <mark>khalayak</mark> ramai <mark>menyaksikan</mark> <mark>nyanyian</mark> burung di <mark>pantai</mark> pulau <mark>Seribu</mark>, sungguh <mark>amboi</mark> pemandangannya.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Plosif (P, T, K, B, D, G)</span>
+                Bapak Budi pergi ke pasar, panik mencari peniti tersembunyi di tumpukan kotak-kotak kayu tebal bergembok ganda.
+            </div>
+        </div>
+        <div class="tip-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <div>
+                <strong>Tips Artikulasi:</strong> Buka mulut lebih lebar dari biasanya. Pastikan huruf konsonan di akhir kata (seperti 'k' pada 'merek', 't' pada 'syarat') terdengar jelas, tidak tertelan.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">02</div>
+            <h3 class="section-title">Rentang Emosi & Ekspresi (Dynamic Range)</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                <span class="annotation">Sangat Antusias / Excited (Nada tinggi, cepat)</span>
+                Wah, gila sih! Akhirnya paket yang aku tunggu-tunggu selama sebulan nyampe juga! Kalian wajib banget lihat ini sekarang juga!
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Sedih / Empati (Nada rendah, lambat, sedikit bergetar)</span>
+                Aku ngerti perasaanmu... Kehilangan sesuatu yang sangat berharga itu memang berat banget. Nggak apa-apa kalau kamu mau nangis hari ini.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Tegas / Otoritatif (Suara perut, lantang, jelas)</span>
+                Saya tekankan sekali lagi, kita tidak bisa mentolerir keterlambatan proyek ini. Semua laporan harus ada di meja saya besok pagi sebelum jam delapan!
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Sarkasme / Ironi (Senyum sinis, intonasi ditarik)</span>
+                Oh, bagus banget... Tentu saja hujan deras pas aku baru aja selesai nyuci motor. Memang hari keberuntunganku.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">03</div>
+            <h3 class="section-title">Ritme, Napas & Ketidaksempurnaan Alami</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                <span class="annotation">Berpikir / Ragu-ragu (Gunakan filler words alami)</span>
+                Emm... sebenarnya, aku kurang yakin sih. Kayaknya... ya, mungkin kita bisa coba opsi yang kedua? Tapi... aduh, aku juga takut salah.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Tergesa-gesa / Panik (Napas pendek, tanpa jeda panjang)</span>
+                Cepat! Cepat! Kita udah telat lima belas menit! Kalau keretanya berangkat kita bakal ketinggalan pesawat! Kunci mobil di mana tadi naruhnya?!
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Berbisik rahasia (Lebih banyak udara, volume minim)</span>
+                Ssst... jangan berisik. Kayaknya ada orang di luar pintu. Kamu pegang senter ini, aku bakal coba cek ke depan pelan-pelan.
+            </div>
+        </div>
+        <div class="tip-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+            <div>
+                <strong>Penting untuk Voice AI:</strong> Model AI modern sangat membutuhkan data "suara tidak sempurna" (seperti gumaman 'emm', tarikan napas, dan keraguan) agar hasil suara tidak terdengar kaku seperti robot generasi lama.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">04</div>
+            <h3 class="section-title">Format Data & Campuran Bahasa (Code-Switching)</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                <span class="annotation">Angka Kompleks & Tanggal</span>
+                Total investasi mencapai Rp2.450.700.000 (dua miliar empat ratus lima puluh juta tujuh ratus ribu rupiah), tercatat pada tanggal 14 Agustus 2024.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Akronim & Singkatan Resmi</span>
+                Berdasarkan data dari BMKG dan BNPB, indeks kualitas udara atau ISPU di kawasan Jabodetabek sedang tidak sehat, sehingga dianjurkan memakai masker N-95.
+            </div>
+            <div class="script-line" style="margin-top: 1rem;">
+                <span class="annotation">Code-Switching (Indo - Inggris)</span>
+                Nah, untuk urusan *user interface*, kita butuh *framework* yang *scalable*. Mungkin *machine learning model*-nya bisa di-*deploy* pakai *cloud services* agar *latency*-nya lebih rendah.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">05</div>
+            <h3 class="section-title">Monolog: Storytelling (Pembacaan Buku)</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                Angin malam berhembus menembus celah jendela kayu tua itu, membawa aroma tanah basah sehabis hujan. Di sudut ruangan, Raden terdiam, menatap nyala lilin yang mulai meredup. "Apakah ini akhir dari segalanya?" gumamnya pelan. Matanya menerawang jauh, mengingat kembali janji yang terucap di bawah pohon beringin puluhan tahun silam. Waktu seakan berhenti, namun detak jam dinding tua terus mengingatkan bahwa pagi akan segera tiba, membawa kenyataan yang harus ia hadapi.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number">06</div>
+            <h3 class="section-title">Monolog: Presentasi Profesional</h3>
+        </div>
+        <div class="script-box">
+            <div class="script-line">
+                Selamat pagi, Bapak dan Ibu sekalian. Terima kasih telah hadir dalam rapat pleno kuartal ketiga. Hari ini, saya akan memaparkan analisis tren pasar dan strategi ekspansi kita untuk tahun depan. Seperti yang bisa kita lihat pada grafik di layar, terjadi peningkatan retensi pelanggan sebesar 24% pasca peluncuran fitur terbaru kita. Ini membuktikan bahwa pendekatan yang berpusat pada kepuasan pengguna adalah kunci utama keberlanjutan bisnis kita di era digital ini.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Dirancang secara khusus untuk pemrosesan dataset AI Text-to-Speech (TTS) dan Voice-to-Voice.</p>
+        <p>Gunakan format audio lossless (.WAV 48kHz, 24-bit) untuk hasil kloning maksimal.</p>
+    </div>
+</div>
+
+</body>
+</html>
